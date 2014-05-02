@@ -1,0 +1,229 @@
+<?xml version="1.0" ?>
+<!DOCTYPE tests [
+  <!ELEMENT tests (test)+>
+  <!ATTLIST tests
+            totalpoints CDATA "100">
+  <!ELEMENT test (#PCDATA)>
+  <!ATTLIST test
+            id         ID            #REQUIRED
+            cleardata  (true|false)  "true"
+            fpoints    CDATA         "3"
+            fnext      IDREF         #IMPLIED>
+]>
+
+<!-- Project Part 1 -->
+
+<tests totalpoints="100">
+
+  <!-- Basic tests -->
+
+  <test id="Bstart" fpoints="100" fnext="_END_">
+start() call fails.
+  </test>
+
+  <test id="Bstcmt" fpoints="100" fnext="_END_">
+Cannot commit a non-op transaction.
+  </test>
+
+  <test id="Bstabt" fpoints="100" fnext="_END_">
+Cannot abort a non-op transaction.
+  </test>
+
+  <test id="Badd" fpoints="100" fnext="_END_">
+Cannot add flight/rooms/cars/customer.
+  </test>
+
+  <test id="Baddcmt" fpoints="100" fnext="_END_">
+commit fails after adding flight/rooms/cars/customer.
+  </test>
+
+  <test id="Baddcmtrd" fpoints="100" fnext="_END_">
+Query of flight/rooms/cars/customer does not return correct result.
+  </test>
+
+  <test id="Baddcmtrsv" fpoints="100" fnext="_END_">
+Cannot make reservations.
+  </test>
+
+  <test id="Baddabt" fpoints="100" fnext="_END_">
+abort fails after adding flight/rooms/cars/customer.
+  </test>
+
+  <test id="Baddabtrd" fpoints="100" fnext="_END_">
+Query of flight/rooms/cars/customer does not return correct result after an abort.
+  </test>
+
+
+  <!-- Semantic tests -->
+
+  <test id="Stoomanyrsv">
+Allows reservation of more than available items.
+  </test>
+
+  <test id="Saddcmtdelcmt" fnext="Sbill" fpoints="10">
+Cannot delete items.
+  </test>
+
+  <test id="Stoomanydel">
+Allows delete of more than available items.
+  </test>
+
+  <test id="Sdelreserved">
+Allows delete of flight with reservations.
+  </test>
+
+  <test id="Sbill">
+Does not compute correct bill.
+  </test>
+
+  <test id="Supdateprc">
+Cannot update price.
+  </test>
+
+  <test id="Sprsvprc">
+Price is not preserved when adding with price less than 0.
+  </test>
+
+  <test id="Ssamekey">
+Cannot handle room and car at same location.
+  </test>
+
+  <test id="Saddrd">
+Cannot query items added earlier in same transaction.
+  </test>
+
+  <test id="Saddcmtdelrsv">
+Allows reservation of items deleted earlier in same transaction.
+  </test>
+
+  <test id="Sbadxid">
+Bogus xid does not throw InvalidTransactionException.
+  </test>
+
+  <test id="Sshutdown" fpoints="0">
+shutdown does not immediately exit.
+  </test>
+
+
+  <!-- Locking tests -->
+
+  <test id="Lconc" fpoints="5">
+Two non-conflicting concurrent transactions fail.
+  </test>
+
+  <test id="Lrowlevel" fpoints="5">
+Does not do row-level locking.
+  </test>
+
+  <test id="Lrdrd" fpoints="5">
+Improper locking: query and query.
+  </test>
+
+  <test id="Lrdwr" fpoints="5">
+Improper locking: query and update.
+  </test>
+
+  <test id="Lwrrd" fpoints="5">
+Improper locking: update and query.
+  </test>
+
+  <test id="Lwrwr" fpoints="5">
+Improper locking: update and update.
+  </test>
+
+  <test id="Ladd" fpoints="5">
+add does not acquire exclusive lock.
+  </test>
+
+  <test id="Ldel" fpoints="5">
+delete does not acquire exclusive lock.
+  </test>
+
+  <test id="Ldelres" fpoints="5">
+delete locks customer's reservations.
+  </test>
+
+  <test id="Lnonexi" fpoints="5">
+query does not acquire lock on non-existent items.
+  </test>
+
+  <test id="Ldelcus" fpoints="5">
+deleteCustomer does not lock and un-reserve reservations.
+  </test>
+
+  <test id="Lbillprc" fpoints="5">
+queryCustomerBill does not read-lock prices.
+  </test>
+
+  <test id="Lbillres" fpoints="5">
+queryCustomerBill does not lock to prevent new reservations.
+  </test>
+
+  <test id="Ldeadlock" fpoints="3">
+Deadlocked transaction is not aborted.
+  </test>
+
+  <test id="Lcmtother" fpoints="5">
+One transaction commits another transaction's changes.
+  </test>
+
+  <test id="Lreadold" fpoints="5">
+Does not read most current value at time of read.
+  </test>
+
+
+  <!-- Failure tests -->
+
+  <test id="Fdie" fnext="Fdieb4" fpoints="15">
+dieNow does not immediately exit.
+  </test>
+
+  <test id="Fdiest" fnext="Fdieb4" fpoints="15">
+start() call fails after server failure and restart.
+  </test>
+
+  <test id="Faddcmtdierd" fnext="Fdieb4" fpoints="15">
+After failure, previous committed transactions are lost.
+  </test>
+
+  <test id="Fadddierd" fpoints="5">
+After failure, transaction is not forcibly aborted.
+  </test>
+
+  <test id="Fadddiexid" fpoints="1">
+Forcibly aborted transaction does not throw TransactionAbortedException.
+  </test>
+
+  <test id="Fdieb4" fnext="Fdieaft" fpoints="10">
+dieBeforePointerSwitch fails.
+  </test>
+
+  <test id="Fdieb4cmt" fnext="Fdieaft" fpoints="10">
+After dieBeforePointerSwitch is set, server does not die during commit.
+  </test>
+
+  <test id="Fdieb4self" fnext="Fdieaft" fpoints="10">
+After dieBeforePointerSwitch, transaction is not forcibly aborted, or previous committed transactions are lost.
+  </test>
+
+  <test id="Fdieb4other" fpoints="5">
+After dieBeforePointerSwitch, other transaction is not forcibly aborted.
+  </test>
+
+  <test id="Fdieaft" fnext="_END_" fpoints="10">
+dieAfterPointerSwitch fails.
+  </test>
+
+  <test id="Fdieaftcmt" fnext="_END_" fpoints="10">
+After dieAfterPointerSwitch is set, server does not die during commit.
+  </test>
+
+  <test id="Fdieaftself" fnext="_END_" fpoints="10">
+After dieAfterPointerSwitch, transaction is not committed, or previous committed transactions are lost.
+  </test>
+
+  <test id="Fdieaftother" fpoints="5">
+After dieAfterPointerSwitch, other transactions are not forcibly aborted.
+  </test>
+
+</tests>

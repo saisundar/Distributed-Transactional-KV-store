@@ -1,0 +1,34 @@
+1
+1 call start
+1 return
+1 call addFlight xid "347" 1 310
+1 return true
+1 call addRooms xid "Stanford" 1 150
+1 return true
+1 call addCars xid "SFO" 1 30
+1 return true
+1 call newCustomer xid "John"
+1 return true
+1 call newCustomer xid "Bob"
+1 return true
+1 call commit xid
+1 return true
+1 call start
+1 return
+1 call reserveFlight xid "John" "347"
+1 return true
+1 call reserveRoom xid "John" "Stanford"
+1 return true
+1 call reserveCar xid "John" "SFO"
+1 return true
+1 call commit xid
+1 return true
+1 call start
+1 return
+1 call reserveFlight xid "Bob" "347"
+1 return false
+1 call reserveRoom xid "Bob" "Stanford"
+1 return false
+1 call reserveCar xid "Bob" "SFO"
+1 return false
+1 exit

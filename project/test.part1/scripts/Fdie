@@ -1,0 +1,4 @@
+1
+1 call dieNow
+1 except java.rmi.RemoteException 
+1 exit

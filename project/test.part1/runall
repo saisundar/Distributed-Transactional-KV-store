@@ -1,0 +1,26 @@
+#!/bin/tcsh
+
+setenv RMIPORT 1105
+
+rmiregistry -J-classpath -J.. $RMIPORT &
+
+pushd ../../submissions
+set stulist=`ls` 
+popd 
+
+/bin/rm -rf ../../results 
+mkdir ../../results 
+
+/bin/rm -f MASTER.log
+#foreach user (weihua yongqian yswu zhenyin)
+foreach user ($stulist)
+  echo `date`: Running user $user
+  ./runone $user >&MASTER.log
+  if ($?) then 
+    echo `date`: Test errored
+    exit 1
+  endif
+  echo `date`: User $user finished
+  mv MASTER.log ../../results/$user
+end
+exit 0

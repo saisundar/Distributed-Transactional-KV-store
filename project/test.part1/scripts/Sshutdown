@@ -1,0 +1,4 @@
+1
+1 call shutdown
+1 except java.rmi.RemoteException 
+1 exit

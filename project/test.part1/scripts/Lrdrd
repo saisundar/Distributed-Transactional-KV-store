@@ -1,0 +1,16 @@
+2
+1 call start
+1 return
+1 call addFlight xid "347" 100 310
+1 return true
+1 call commit xid
+1 return true
+1 call start
+1 return
+2 call start
+2 return
+1 call queryFlight xid "347"
+1 return 100
+2 call queryFlightPrice xid "347"
+2 return 310
+2 exit
