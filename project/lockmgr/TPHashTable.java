@@ -40,9 +40,10 @@ public class TPHashTable
             hashSlot = -hashSlot;
         }
         vectSlot = (Vector) vect.elementAt( hashSlot );
-        vectSlot.addElement(xobj);
+        vectSlot.addElement(xobj);          //adds one more element to the end of the vector, increasing the size by 1.
     }
 
+    //returns all objects which are asocuated with the transaction(identified by Xobj), in one vector.
     public synchronized Vector elements(XObj xobj) {
         if (xobj == null) return (new Vector());
         
@@ -66,7 +67,9 @@ public class TPHashTable
         }
         return elemVect;
     }
-    
+
+
+  //looks for the exact object in the vector .  
     public synchronized boolean contains(XObj xobj)
     {
         if (xobj == null) return false;
@@ -82,6 +85,7 @@ public class TPHashTable
         return vectSlot.contains(xobj);
     }
     
+    //removes the exact object from the vector.
     public synchronized boolean remove(XObj xobj)
     {
         if (xobj == null) return false;
@@ -97,6 +101,7 @@ public class TPHashTable
         return vectSlot.removeElement(xobj);
     }
 
+//returns the first matching obkect with the same Xid from the vector.
     public synchronized XObj get(XObj xobj)
     {
         if (xobj == null) return null;
@@ -125,6 +130,9 @@ public class TPHashTable
         System.out.println( this.getClass() + "::" + msg + "(slot" + hashSlot + ")::" + xobj.toString() );
     }
     
+    //returns linear vecotr of all obkects inserted into one vector object.
+
+    // why is this not synchronised? it should be right ?
     public Vector allElements() {
         Vector vectSlot = null;
         XObj xobj = null;
@@ -145,6 +153,7 @@ public class TPHashTable
         return hashContents;
     }
     
+    //removes all elements with the same transaction id as Xobj.
     public synchronized void removeAll(XObj xobj)
     {
         if (xobj == null) return;

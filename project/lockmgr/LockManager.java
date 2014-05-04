@@ -45,9 +45,9 @@ public class LockManager
      * @throws DeadlockException if deadlock is detected (using a timeout)
      */
     public boolean lock(int xid, String strData, int lockType)
-	throws DeadlockException 
+    throws DeadlockException 
     {
-    
+
         // if any parameter is invalid, then return false
         if (xid < 0) { 
             return false;
@@ -87,40 +87,39 @@ public class LockManager
                             WaitObj waitObj = new WaitObj(xid, strData, lockType);
                             this.waitTable.remove(waitObj);
                         }
-                         
+
                         if (bConvert.get(0) == true) {
                             // lock conversion 
                             // *** ADD CODE HERE *** to carry out the lock conversion in the
                             // lock table
-			    System.out.print("Converting lock...");
-			    convertLockTableObj(trxnObj);
-			    convertLockTableObj(dataObj);
-			    System.out.println("done");
-			    
-                        } else {
+                           System.out.print("Converting lock...");
+                           convertLockTableObj(trxnObj);
+                           convertLockTableObj(dataObj);
+                           System.out.println("done");
+
+                       } else {
                             // a lock request that is not lock conversion
-                            this.lockTable.add(trxnObj);
-                            this.lockTable.add(dataObj);
-                        }
+                        this.lockTable.add(trxnObj);
+                        this.lockTable.add(dataObj);
                     }
                 }
-                if (bConflict) {
-                    // lock conflict exists, wait
-                    waitLock(dataObj);
-                }
             }
-        } 
-        catch (DeadlockException deadlock) {
-            throw deadlock;
+            if (bConflict) {
+                    // lock conflict exists, wait
+                waitLock(dataObj);
+            }
         }
-        catch (RedundantLockRequestException redundantlockrequest) {
-              // just ignore the redundant lock request
-            return true;
-        } 
-
-        return true;
+    } 
+    catch (DeadlockException deadlock) {
+        throw deadlock;
     }
+    catch (RedundantLockRequestException redundantlockrequest) {
+              // just ignore the redundant lock request
+        return true;
+    } 
 
+    return true;
+}
 
     /**
      * Unlocks all data items locked on behalf of the transaction with
@@ -145,15 +144,15 @@ public class LockManager
             Vector waitVector;
             WaitObj waitObj;
             int size = vect.size();
-                                                
+
             for (int i = (size - 1); i >= 0; i--) {
-                
+
                 trxnObj = (TrxnObj) vect.elementAt(i);
                 this.lockTable.remove(trxnObj);
 
                 DataObj dataObj = new DataObj(trxnObj.getXId(), trxnObj.getDataName(), trxnObj.getLockType());
                 this.lockTable.remove(dataObj);
-                                        
+
                 // check if there are any waiting transactions. 
                 synchronized (this.waitTable) {
                     // get all the transactions waiting on this dataObj
@@ -169,19 +168,8 @@ public class LockManager
                                 
                                 // remove interrupted thread from waitTable only if no
                                 // other transaction has locked this data item
-                                if (vect1.size () == 0
-
-
-
-				    || (vect1.size()==1 &&
-					((XObj)vect1.elementAt(0)).getXId()==waitObj.getXId())
-
-
-
-
-) {
+                                if (vect1.size () == 0 || (vect1.size()==1 && ((XObj)vect1.elementAt(0)).getXId()==waitObj.getXId())) {
                                     this.waitTable.remove(waitObj);     
-                                    
                                     try {
                                         synchronized (waitObj.getThread()) {
                                             waitObj.getThread().notify();
@@ -198,14 +186,12 @@ public class LockManager
                                     break;
                                 }
                             }
-
                             // stop granting READ locks as soon as you find a WRITE lock
                             // request in the queue of requests
                             break;
                         } else if (waitObj.getLockType() == LockManager.READ) {
                             // remove interrupted thread from waitTable.
                             this.waitTable.remove(waitObj);    
-                            
                             try {
                                 synchronized (waitObj.getThread()) {
                                     waitObj.getThread().notify();
@@ -219,11 +205,9 @@ public class LockManager
                 } 
             }
         } 
-
         return true;
     }
 
-    
     // returns true if the lock request on dataObj conflicts with
     // already existing locks. If the lock request is a redundant one
     // (for eg: if a transaction holds a read lock on certain data
@@ -233,12 +217,12 @@ public class LockManager
     // request is a conversion from READ lock to WRITE lock, then
     // bitset is set.
     private boolean lockConflict(DataObj dataObj, BitSet bitset) 
-	throws DeadlockException, RedundantLockRequestException 
+    throws DeadlockException, RedundantLockRequestException 
     {
         Vector vect = this.lockTable.elements(dataObj);
         DataObj dataObj2;
         int size = vect.size();
-        
+
         // as soon as a lock that conflicts with the current lock
         // request is found, return true
         for (int i = 0; i < size; i++) {
@@ -253,7 +237,7 @@ public class LockManager
                     // item and it is requesting a READ lock, this
                     // lock request is redundant.
                     throw new RedundantLockRequestException(dataObj.getXId(), 
-							    "Redundant READ lock request");
+                       "Redundant READ lock request");
                 } else if (dataObj.getLockType() == DataObj.WRITE) {
                     // transaction already has a lock and is requesting a WRITE lock
                     // now there are two cases to analyze here
@@ -261,131 +245,126 @@ public class LockManager
                     // (2) transaction already had a WRITE lock
                     // Seeing the comments at the top of this function might be helpful
                     // *** ADD CODE HERE *** to take care of both these cases
-		    if (dataObj2.getLockType() == DataObj.WRITE) {
+                  if (dataObj2.getLockType() == DataObj.WRITE) {
 			// since the transaction already has a write lock on this
 			// data item, this locm request is redundant
-			throw new RedundantLockRequestException(dataObj.getXId(),
-								"Redundant WRITE lock request");
-		    }
-		    else {
+                   throw new RedundantLockRequestException(dataObj.getXId(),
+                    "Redundant WRITE lock request");
+               }
+               else {
 			// the transaction has a READ lock and has requested a WRITE lock,
 			// so this is a lock conversion request
-			System.out.println("Want WRITE, have READ, requesting lock upgrade");
-			bitset.set(0);
+                   System.out.println("Want WRITE, have READ, requesting lock upgrade");
+                   bitset.set(0);
 			// we can't just return false here, because some other
 			// transaction may also have a READ lock. So we must
 			// continue iterating through the chain of locks.
-		    }
-                }
-            }
-            else {
-                if (dataObj.getLockType() == DataObj.READ) {
-                    if (dataObj2.getLockType() == DataObj.WRITE) {
+               }
+           }
+       }
+       else {
+        if (dataObj.getLockType() == DataObj.READ) {
+            if (dataObj2.getLockType() == DataObj.WRITE) {
                         // transaction is requesting a READ lock and some other transaction
                         // already has a WRITE lock on it ==> conflict
-                        System.out.println("Want READ, someone has WRITE");
-                        return true;
-                    }
-                    else {
+                System.out.println("Want READ, someone has WRITE");
+                return true;
+            }
+            else {
                         // do nothing 
-                    }
-                } else if (dataObj.getLockType() == DataObj.WRITE) {
+            }
+        } else if (dataObj.getLockType() == DataObj.WRITE) {
                     // transaction is requesting a WRITE lock and some other transaction has either
                     // a READ or a WRITE lock on it ==> conflict
-                    System.out.println("Want WRITE, someone has READ or WRITE");
-                    return true;
-                }
-            }
+            System.out.println("Want WRITE, someone has READ or WRITE");
+            return true;
         }
-        
-        // no conflicting lock found, return false
-        return false;
-
     }
-    
-    private void waitLock(DataObj dataObj) throws DeadlockException {
+}
+        // no conflicting lock found, return false
+return false;
+}
+
+private void waitLock(DataObj dataObj) throws DeadlockException {
         // Check timestamp or add a new one.
         // Will always add new timestamp for each new lock request since
         // the timeObj is deleted each time the transaction succeeds in
         // getting a lock (see Lock() )
-        
-        TimeObj timeObj = new TimeObj(dataObj.getXId());
-        TimeObj timestamp = null;
-        long timeBlocked = 0;
-        Thread thisThread = Thread.currentThread();
-        WaitObj waitObj = new WaitObj(dataObj.getXId(), dataObj.getDataName(), dataObj.getLockType(), thisThread);
 
-        synchronized (this.stampTable) {
-            Vector vect = this.stampTable.elements(timeObj);
-            if (vect.size() == 0) {
+    TimeObj timeObj = new TimeObj(dataObj.getXId());
+    TimeObj timestamp = null;
+    long timeBlocked = 0;
+    Thread thisThread = Thread.currentThread();
+    WaitObj waitObj = new WaitObj(dataObj.getXId(), dataObj.getDataName(), dataObj.getLockType(), thisThread);
+
+    synchronized (this.stampTable) {
+        Vector vect = this.stampTable.elements(timeObj);
+        if (vect.size() == 0) {
                 // add the time stamp for this lock request to stampTable
-                this.stampTable.add(timeObj);
-                timestamp = timeObj;
-            } else if (vect.size() == 1) {
+            this.stampTable.add(timeObj);
+            timestamp = timeObj;
+        } else if (vect.size() == 1) {
                 // lock operation could have timed out; check for deadlock
-                TimeObj prevStamp = (TimeObj)vect.firstElement();
-                timestamp = prevStamp;
-                timeBlocked = timeObj.getTime() - prevStamp.getTime();
-                if (timeBlocked >= LockManager.DEADLOCK_TIMEOUT) {
+            TimeObj prevStamp = (TimeObj)vect.firstElement();
+            timestamp = prevStamp;
+            timeBlocked = timeObj.getTime() - prevStamp.getTime();
+            if (timeBlocked >= LockManager.DEADLOCK_TIMEOUT) {
                     // the transaction has been waiting for a period greater than the timeout period
-                    cleanupDeadlock(prevStamp, waitObj);
-                }
-            } else {
+                cleanupDeadlock(prevStamp, waitObj);
+            }
+        } else {
                 // should never get here. shouldn't be more than one time stamp per transaction
                 // because a transaction at a given time the transaction can be blocked on just one lock
                 // request. 
-            }
-        } 
-        
+        }
+    } 
         // suspend thread and wait until notified...
-
-        synchronized (this.waitTable) {
-            if (! this.waitTable.contains(waitObj)) {
+    synchronized (this.waitTable) {
+        if (! this.waitTable.contains(waitObj)) {
                 // register this transaction in the waitTable if it is not already there 
-                this.waitTable.add(waitObj);
+            this.waitTable.add(waitObj);
+        }
+        else {
+                // else lock manager already knows the transaction is waiting.
+        }
+    }
+    synchronized (thisThread) {
+        try {
+            thisThread.wait(LockManager.DEADLOCK_TIMEOUT - timeBlocked);
+            TimeObj currTime = new TimeObj(dataObj.getXId());
+            timeBlocked = currTime.getTime() - timestamp.getTime();
+            if (timeBlocked >= LockManager.DEADLOCK_TIMEOUT) {
+                    // the transaction has been waiting for a period greater than the timeout period
+                cleanupDeadlock(timestamp, waitObj);
             }
             else {
-                // else lock manager already knows the transaction is waiting.
+                return;
             }
         }
-        
-        synchronized (thisThread) {
-            try {
-                thisThread.wait(LockManager.DEADLOCK_TIMEOUT - timeBlocked);
-                TimeObj currTime = new TimeObj(dataObj.getXId());
-                timeBlocked = currTime.getTime() - timestamp.getTime();
-                if (timeBlocked >= LockManager.DEADLOCK_TIMEOUT) {
-                    // the transaction has been waiting for a period greater than the timeout period
-                    cleanupDeadlock(timestamp, waitObj);
-                }
-                else {
-                    return;
-                }
-            }
-            catch (InterruptedException e) {
-                System.out.println("Thread interrupted?");
-            }
+        catch (InterruptedException e) {
+            System.out.println("Thread interrupted?");
         }
     }
-    
+}
+
     // cleanupDeadlock cleans up stampTable and waitTable, and throws
     // DeadlockException
-    private void cleanupDeadlock(TimeObj tmObj, WaitObj waitObj)
-        throws DeadlockException
-    {
-        synchronized (this.stampTable) {
-            synchronized (this.waitTable) {
-                this.stampTable.remove(tmObj);
-                this.waitTable.remove(waitObj);
-            }
+private void cleanupDeadlock(TimeObj tmObj, WaitObj waitObj)
+throws DeadlockException
+{
+    synchronized (this.stampTable) {
+        synchronized (this.waitTable) {
+            this.stampTable.remove(tmObj);
+            this.waitTable.remove(waitObj);
         }
-        throw new DeadlockException(waitObj.getXId(), "Sleep timeout...deadlock.");
     }
+    throw new DeadlockException(waitObj.getXId(), "Sleep timeout...deadlock.");
+}
 
-    private void convertLockTableObj(TrxnObj trxnObj)
-    {
+private void convertLockTableObj(TrxnObj trxnObj)
+{
 	trxnObj.setLockType(TrxnObj.READ);
 	TrxnObj trxnObj2 = (TrxnObj) this.lockTable.get(trxnObj);
 	trxnObj2.setLockType(TrxnObj.WRITE);
-    }
+}
 }
