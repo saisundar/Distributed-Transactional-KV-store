@@ -42,7 +42,20 @@ public class ResourceManagerImpl
 	}
     }
     
-    
+    //TODO:
+    //1.  Routine to check for active xids == this requires a hashset of active Xids..
+    // hashtables for each relation == will throw the invalid
+    //2.  We need to appened the name of the relation to the string .. for eg:
+    // IRVINE_c for cars in irvine, and IRVINE_h for rooms in irvine ,so that locks dont clash.
+    //3.  we need to handle the exceptions everywree in all routines:
+    //	a)Deadlocks
+	//	b)invali transactions 
+	//	c)redundant Lock exceptions :
+	//	d)throw trascated aborted exception based on unidentified exceptions or deadlocks..
+	//	e)add a logging routine, which has to be invoke from all other routines. 
+	//  
+
+
     public ResourceManagerImpl() throws RemoteException {
 	flightcounter = 0;
 	flightprice = 0;
