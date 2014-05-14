@@ -47,6 +47,7 @@ public class ResourceManagerImpl
     // hashtables for each relation == will throw the invalid
     //2.  We need to appened the name of the relation to the string .. for eg:
     // IRVINE_c for cars in irvine, and IRVINE_h for rooms in irvine ,so that locks dont clash.
+    // we need to also lock the xid when its being returned for the start of each trasnction. We CANNOT assume the incrementation is atomic.
     //3.  we need to handle the exceptions everywree in all routines:
     //	a)Deadlocks
 	//	b)invali transactions 
