@@ -42,7 +42,7 @@ public class ResourceManagerImpl
 	}
     }
     
-    //TODO:
+    ///TODO:
     //1.  Routine to check for active xids == this requires a hashset of active Xids..
     // hashtables for each relation == will throw the invalid
     //2.  We need to appened the name of the relation to the string .. for eg:
@@ -50,12 +50,15 @@ public class ResourceManagerImpl
     // we need to also lock the xid when its being returned for the start of each trasnction. We CANNOT assume the incrementation is atomic.
     //3.  we need to handle the exceptions everywree in all routines:
     //	a)Deadlocks
-	//	b)invali transactions 
+	//	b)invalid transactions 
 	//	c)redundant Lock exceptions :
 	//	d)throw trascated aborted exception based on unidentified exceptions or deadlocks..
 	//	e)add a logging routine, which has to be invoke from all other routines. 
-	//  
-
+	//4. synchronous checkpointing needs to be done  in two cases
+	//a)  after n new transactions have entered the system.
+	// b) when graceful system shutdown - in both cases we need to wait for the currently exeucting
+	// trnsactions to commit and then do it. 
+	// c)  
 
     public ResourceManagerImpl() throws RemoteException {
 	flightcounter = 0;
