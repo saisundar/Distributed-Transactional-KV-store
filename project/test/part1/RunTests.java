@@ -1,3 +1,5 @@
+package project.test.part1;
+
 import javax.xml.parsers.*; 
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;

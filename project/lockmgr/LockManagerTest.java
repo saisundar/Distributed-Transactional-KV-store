@@ -1,4 +1,4 @@
-package lockmgr;
+package project.lockmgr;
 
 import java.util.*;
 

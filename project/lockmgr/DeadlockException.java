@@ -1,4 +1,4 @@
-package lockmgr;
+package project.lockmgr;
 
 /**
  *   Thrown to indicate that the transaction is deadlocked and should be aborted.

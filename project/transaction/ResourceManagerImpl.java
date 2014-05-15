@@ -1,6 +1,6 @@
-package transaction;
+package project.transaction;
 
-import lockmgr.*;
+import project.lockmgr.*;
 import java.rmi.*;
 
 /** 

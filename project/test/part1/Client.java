@@ -1,9 +1,11 @@
-package transaction;
+package project.test.part1;
 
 import java.rmi.*;
 import java.io.*;
 import java.util.*;
 import java.lang.reflect.*;
+
+import project.transaction.ResourceManager;
 
 /**
  * exit(0): test passed
