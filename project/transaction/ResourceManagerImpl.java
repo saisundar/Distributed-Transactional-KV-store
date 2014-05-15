@@ -5,7 +5,7 @@ import project.transaction.bean.*;
 
 import java.rmi.*;
 import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** 
  * Resource Manager for the Distributed Travel Reservation System.
@@ -16,17 +16,17 @@ import java.util.Hashtable;
 public class ResourceManagerImpl 
 extends java.rmi.server.UnicastRemoteObject
 implements ResourceManager {
-	//Bookekeeping
+	//Book keeping and other variables
 	private HashSet<Integer> activeTxns;
 	private LockManager lockManager;
 	private final int WRITE = 1;
 	private final int READ = 0;
 
 	// Data Sets
-	private Hashtable<String,Flight> flightTable;
-	private Hashtable<String,Flight> carTable;
-	private Hashtable<String,Flight> hotelTable;
-	private Hashtable<String,Flight> reservationTable;
+	private ConcurrentHashMap<String,Flight> flightTable;
+	private ConcurrentHashMap<String,Flight> carTable;
+	private ConcurrentHashMap<String,Flight> hotelTable;
+	private ConcurrentHashMap<String,Flight> reservationTable;
 
 	// in this toy, we don't care about location or flight number
 	protected int flightcounter, flightprice, carscounter, carsprice, roomscounter, roomsprice;
@@ -75,13 +75,14 @@ implements ResourceManager {
 	// trnsactions to commit and then do it. 
 	// c)  
 
+	//
 	public ResourceManagerImpl() throws RemoteException {
 		lockManager = new LockManager();
 		activeTxns = new HashSet<Integer>();
-		flightTable = new Hashtable<String, Flight>();
-		carTable = new Hashtable<String, Flight>();
-		hotelTable = new Hashtable<String, Flight>();
-		reservationTable = new Hashtable<String, Flight>();
+		flightTable = new ConcurrentHashMap<String, Flight>();
+		carTable = new ConcurrentHashMap<String, Flight>();
+		hotelTable = new ConcurrentHashMap<String, Flight>();
+		reservationTable = new ConcurrentHashMap<String, Flight>();
 		xidCounter = 1;
 	}
 
