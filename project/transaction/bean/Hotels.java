@@ -41,7 +41,7 @@ public int getnumRooms() {
 }
 
 
-public void setnumRooms(int numRooms) {
+public void setNumRooms(int numRooms) {
 	this.numRooms = numRooms;
 }
 

@@ -126,7 +126,7 @@
 
 			//wait for all transactions to get over. Sleep on the HashSetEmpty object.
 			synchronised(HashSetEmpty){}
-			while(HashSetEmpty)
+			while(!HashSetEmpty)
 				HashSetEmpty.wait();
 			}
 			// need to add code in places where removing elements from the hashset and it becomes empty , wake up everyone sleeping on it.
@@ -142,7 +142,7 @@
 					while(stopAndWait)
 						stopAndWait.wait();
 				}
-
+				
 				if(activeTxns.contains(xidCounter)){
 					// HOW TO HANDLE THIS ?
 					System.out.println("SHOULD NOT REACH: XID DUPLICATE");
@@ -170,6 +170,7 @@
 			return;
 		}
 
+		
 
 		// ADMINISTRATIVE INTERFACE
 		public boolean addFlight(int xid, String flightNum, int numSeats, int price) 
@@ -236,12 +237,15 @@
 			isValidTrxn(xid);
 		
 
-			if(location==null)
-				return false;
+			
 			try{
+				if(location==null)
+					return false;
 				String lockString = "Hotels."+location;
 				if(lockManager.lock(xid, lockString, WRITE) == false){
 					return false;
+					//TODO: to Abort/ return false
+		
 				}
 				
 				int numAvail = numRooms;
@@ -293,9 +297,10 @@
 
 			//throw InvalidTransactionException;
 			isValidTrxn(xid);
-			if(location==null)
-				return false;
 			try{
+				if(location==null)
+					return false;
+				
 				String lockString = "Hotels."+location;
 				if(lockManager.lock(xid, lockString, WRITE) == false){
 					return false;
@@ -309,6 +314,7 @@
 					if(numRooms>numAvail)
 						return false;
 					data.setNumAvail(numAvail-numRooms);
+					data.setNumRooms(data.getnumRooms()-numRooms);
 				}
 				else{
 					// should not happen ... if it happens return false.
