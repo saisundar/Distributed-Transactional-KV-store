@@ -23,6 +23,9 @@
 		private final int WRITE = 1;
 		private final int READ = 0;
 
+		private static Boolean stopAndWait = new Boolean(false);
+		private static Boolean HashSetEmpty = new Boolean(false);
+
 		// Data Sets
 		private ConcurrentHashMap<String,Flight> flightTable;
 		private ConcurrentHashMap<String,Cars> carTable;
@@ -101,10 +104,45 @@
 
 		}
 
+		private void stopIncoming()
+		{
+
+			synchronised(stopAndWait)
+			{
+				if(!stopAndWait){
+					stopAndWait=stopAndWait.valueOf(TRUE);
+					
+				}
+				else
+					return;
+				// {
+				// 	//means stopandwait already raised due to some other condition.
+				// 	//makes no difference , can only happen in case of shutdown/Cp or CP/shutdown.
+				// 	// hence do nothing.
+				// }
+
+			}
+
+
+			//wait for all transactions to get over. Sleep on the HashSetEmpty object.
+			synchronised(HashSetEmpty){}
+			while(HashSetEmpty)
+				HashSetEmpty.wait();
+			}
+			// need to add code in places where removing elements from the hashset and it becomes empty , wake up everyone sleeping on it.
+			return;
+		}
+
 		// TRANSACTION INTERFACE
 		public int start()
 		throws RemoteException {
 			
+				synchronised(stopAndWait)
+				{
+					while(stopAndWait)
+						stopAndWait.wait();
+				}
+
 				if(activeTxns.contains(xidCounter)){
 					// HOW TO HANDLE THIS ?
 					System.out.println("SHOULD NOT REACH: XID DUPLICATE");
@@ -604,6 +642,15 @@
 
 
 		// TECHNICAL/TESTING INTERFACE
+		/** 
+     * Shutdown gracefully. Stop accepting new transactions, wait for
+     * running transactions to terminate, and clean up disk state.
+     * When this RM restarts, it should not attempt to recover its
+     * state if the client called shutdown to terminate it.
+     *
+     * @return true on success, false on failure.
+     * @throws RemoteException on communications failure.
+     */
 		public boolean shutdown()
 		throws RemoteException {
 			System.exit(0);
