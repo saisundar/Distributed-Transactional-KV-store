@@ -122,10 +122,8 @@
 				// }
 
 			}
-
-
 			//wait for all transactions to get over. Sleep on the HashSetEmpty object.
-			synchronised(HashSetEmpty){}
+			synchronised(HashSetEmpty){
 			while(!HashSetEmpty)
 				HashSetEmpty.wait();
 			}
@@ -642,7 +640,61 @@
 		throws RemoteException, 
 		TransactionAbortedException,
 		InvalidTransactionException {
-			roomscounter--;
+				//TODO: Check if valid xid
+		//Acquire an XLock for cars record
+			isValidTrxn();	
+			try{
+				String lockString = "Hotels." + location;
+
+				if(lockManager.lock(xid, lockString, WRITE) == false){
+				//TODO: Handle false return value from lock
+				//Parameters are Invalid, abort the transaction here. 	
+				}
+				lockString = "Reservations."+custName;
+				if(lockManager.lock(xid, lockString, WRITE) == false){
+				//TODO: Handle false return value from lock
+				//Parameters are Invalid, abort the transaction here.
+				}
+
+				int numRoomsAvail = 0;
+				Hotels data = HotelTable.get(location);
+				if(data != null){
+					numRoomsAvail = data.getNumAvail();
+				}
+				if(!(numRoomsAvail > 0)){
+			//TODO: abort/return false
+				}
+
+				Reservation newReservation = new Reservation(custName, 2, location);
+				HashSet<Reservation> reservations;
+				if(reservationTable.containsKey(custName)){
+			//Customer has a reservation
+					reservations = reservationTable.get(custName);
+					if(reservations.contains(newReservation)){
+				//TODO: Duplicate reservation. What to do??
+				//Should abort or return for sure.
+					}
+
+				}else{
+					reservations = new HashSet<Reservation>();
+					reservationTable.put(custName, reservations);
+				}
+
+		//Sure of making a reservation
+				reservations.add(newReservation);
+				return true;
+			}
+			catch (DeadlockException e) {
+					// TODO: Handle DeadLock !
+				e.printStackTrace();
+				abort();
+				throw new TransactionAbortedException(" throwing TransactionAbortedException due to deadlock");
+			}
+			catch( Exception e)	{
+				e.printStackTrace();
+				abort();
+				throw new TransactionAbortedException(" throwing TransactionAbortedException due to unknown exception"+e.getMessage());
+			}
 			return true;
 		}
 
