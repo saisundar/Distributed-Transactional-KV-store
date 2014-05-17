@@ -111,7 +111,6 @@
 			{
 				if(!stopAndWait){
 					stopAndWait=stopAndWait.valueOf(TRUE);
-					
 				}
 				else
 					return;
@@ -127,6 +126,10 @@
 			while(!HashSetEmpty)
 				HashSetEmpty.wait();
 			}
+
+			if(s)
+
+
 			// need to add code in places where removing elements from the hashset and it becomes empty , wake up everyone sleeping on it.
 			return;
 		}
@@ -159,6 +162,7 @@
 		InvalidTransactionException {
 			System.out.println("Committing");
 			return true;
+			
 		}
 
 		//TODO: Remove Xid from active Transactions
@@ -167,8 +171,6 @@
 		InvalidTransactionException {
 			return;
 		}
-
-		
 
 		// ADMINISTRATIVE INTERFACE
 		public boolean addFlight(int xid, String flightNum, int numSeats, int price) 

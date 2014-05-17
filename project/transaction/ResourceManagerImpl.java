@@ -58,22 +58,17 @@ implements ResourceManager {
 	}
 
 	///TODO:
-	//1.  Routine to check for active xids == this requires a hashset of active Xids..
-	// hashtables for each relation == will throw the invalid
-	//2.  We need to appened the name of the relation to the string .. for eg:
-	// IRVINE_c for cars in irvine, and IRVINE_h for rooms in irvine ,so that locks dont clash.
-	// we need to also lock the xid when its being returned for the start of each trasnction. We CANNOT assume the incrementation is atomic.
-	//3.  we need to handle the exceptions everywree in all routines:
-	//	a)Deadlocks
-	//	b)invalid transactions 
-	//	c)redundant Lock exceptions :
-	//	d)throw trascated aborted exception based on unidentified exceptions or deadlocks..
-	//	e)add a logging routine, which has to be invoke from all other routines. 
+	//e) add a logging routine, which has to be invoke from all other routines. 
 	//4. synchronous checkpointing needs to be done  in two cases
-	//a)  after n new transactions have entered the system.
-	// b) when graceful system shutdown - in both cases we need to wait for the currently exeucting
-	// trnsactions to commit and then do it. 
-	// c)  
+	//a) after n new transactions have entered the system.
+	//b) when graceful system shutdown - in both cases we need to wait for the currently exeucting
+	//   trnsactions to commit and then do it. 
+	//c) Identify the places to abort , and places to return false for all database query routines.
+	//d) implmenen the 4 die/shutdown routines.
+	//e) check if excception handling is done in all the routines. 
+	//f) design logging.
+	//g) design the recoevey mechanism - impkemnt the abort/commit functions.
+	//h ) restart/startup functions - to read from the disk ,waht to read, perform recovery on startup.
 
 	//
 	public ResourceManagerImpl() throws RemoteException {
@@ -106,6 +101,8 @@ implements ResourceManager {
 			TransactionAbortedException, 
 			InvalidTransactionException {
 		System.out.println("Committing");
+		//TODO: when xid is removed from the hashset , see if the hashset becomes empty, if so notify the hashSetEmpty thread.
+
 		return true;
 	}
 
@@ -113,6 +110,8 @@ implements ResourceManager {
 	public void abort(int xid)
 			throws RemoteException, 
 			InvalidTransactionException {
+			//TODO: when xid is removed from the hashset , see if the hashset becomes empty, if so notify the hashSetEmpty thread.
+			//TODO: undo all the work that ahs bee done by the transaction.
 		return;
 	}
 
