@@ -129,9 +129,8 @@ implements ResourceManager {
 		String lockString = "Flight."+flightNum;
 
 		//Check if valid xid
-		if(!activeTxns.contains(xid)){
-			throw new InvalidTransactionException(xid, lockString);
-		}
+		isValidTrxn(xid);
+		
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
 				//TODO check handling
@@ -172,9 +171,8 @@ implements ResourceManager {
 		String lockString = "Flight."+flightNum;
 
 		//Check if valid xid
-		if(!activeTxns.contains(xid)){
-			throw new InvalidTransactionException(xid, lockString);
-		}
+		isValidTrxn(xid);
+		
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
 				//TODO check handling
@@ -187,7 +185,7 @@ implements ResourceManager {
 			// TODO: Handle DeadLock !
 			e.printStackTrace();
 		}
-		if(flightTable.contains(flightNum)){
+		if(!flightTable.contains(flightNum)){
 			// Deleting a flight which does not exist
 			// Return False ?
 			return false;
@@ -253,7 +251,9 @@ implements ResourceManager {
 			throws RemoteException, 
 			TransactionAbortedException,
 			InvalidTransactionException {
-		//TODO: Check for invalid xid.
+		//Check for invalid xid.
+		isValidTrxn(xid);
+		
 		if(flightNum == null)
 			throw new InvalidTransactionException(xid, "message");
 
@@ -284,7 +284,9 @@ implements ResourceManager {
 			throws RemoteException, 
 			TransactionAbortedException,
 			InvalidTransactionException {
-		//TODO: Check for invalid xid.
+		//Check for invalid xid.
+		isValidTrxn(xid);
+		
 		if(flightNum == null)
 			throw new InvalidTransactionException(xid, "message");
 
@@ -401,6 +403,9 @@ implements ResourceManager {
 
 		//Sure of making a reservation
 		reservations.add(newReservation);
+		
+		//Make entry in flights because reservation is made
+		flights.put(flightNum, "dummy");
 		
 		//Decrement number of available seats
 		data.setNumAvail(avail - 1);
