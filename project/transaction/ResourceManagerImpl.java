@@ -16,12 +16,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ResourceManagerImpl 
 extends java.rmi.server.UnicastRemoteObject
 implements ResourceManager {
+	
 	//Book keeping and other variables
 	private HashSet<Integer> activeTxns;
 	private LockManager lockManager;
 	private final int WRITE = 1;
 	private final int READ = 0;
-
+	private final boolean shuttingDown=false;
 	// Data Sets
 	private ConcurrentHashMap<String,Flight> flightTable;
 	private ConcurrentHashMap<String,Flight> carTable;
@@ -290,6 +291,10 @@ implements ResourceManager {
 	// TECHNICAL/TESTING INTERFACE
 	public boolean shutdown()
 			throws RemoteException {
+
+		shuttingDown=true;
+
+
 		System.exit(0);
 		return true;
 	}
