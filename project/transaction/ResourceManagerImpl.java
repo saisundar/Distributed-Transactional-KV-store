@@ -31,6 +31,7 @@ implements ResourceManager {
 	private static Boolean stopAndWait = new Boolean(false);
 	private static Boolean HashSetEmpty = new Boolean(true);
 	private static final int SLEEPSHUTDOWN = 5000;
+	
 	// Data Sets
 	private ConcurrentHashMap<String,Flight> flightTable;
 	private ConcurrentHashMap<String,Car> carTable;
@@ -1014,4 +1015,22 @@ implements ResourceManager {
 		return true;
 	}
 
+	//RECOVERY/ STARTUP INTERFACE
+	
+	public void recovery(){
+		Recovery recover = new Recovery();
+		recover.restoreSetup();
+		if(recover.restore(0)==false){
+			// Shut the system down
+			dieNow();
+		}
+		
+		flightTable = (ConcurrentHashMap<String, Flight>) recover.getTR("flightTable").getTable();
+		carTable = (ConcurrentHashMap<String, Car>) recover.getTR("carTable").getTable();
+		hotelTable = (ConcurrentHashMap<String, Hotels>) recover.getTR("hotelTable").getTable();;
+		reservationTable = (ConcurrentHashMap<String, HashSet<Reservation>>) recover.getTR("reservationTable").getTable();;
+		reservedflights = (ConcurrentHashMap<String,Integer>) recover.getTR("flights").getTable();;
+
+		
+	}
 }

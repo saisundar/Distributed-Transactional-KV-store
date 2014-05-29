@@ -443,7 +443,5 @@ implements ResourceManager {
 		return ;
 	}
 
-	public static void recovery(){
-		
-	}
+
 }

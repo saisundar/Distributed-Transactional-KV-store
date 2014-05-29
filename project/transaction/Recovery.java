@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -41,12 +42,20 @@ public class Recovery {
 		callables.add(hotelTR);
 		callables.add(reservationTR);
 		callables.add(reservedflightsTR);
+		
 	}
 
 	public boolean restore(int nTries){
 
 		boolean result = true;
-		List<Future<Integer>> futures = restoreThreads.invokeAll(callables);
+		List<Future<Integer>> futures;
+		try {
+			futures = restoreThreads.invokeAll(callables);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
 		if(nTries==3)
 		{
 			System.out.println("Cannot restore files");
@@ -55,27 +64,36 @@ public class Recovery {
 		}
 
 		for(Future<Integer> future : futures){
-			if(future.get() == 1)
-				System.out.println("Recovery Attempt: "+nTries+" Failed");
+			try {
+				if(future.get() == 1)
+					System.out.println("Recovery Attempt: "+nTries+" Failed");
+			} catch (InterruptedException | ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			result = false;
 		}
 		
 		if(result == false)
 			result = restore(nTries+1);
-		if(nTries == 0)
-			restoreThreads.shutdown();
+
 		return result;
+	}
+	
+	public TableReader getTR(String fileName){
+		if(fileName == "flights")
+			return reservedflightsTR;
+		else if(fileName == "reservationTable")
+			return reservationTR;
+		else if(fileName == "flightTable")
+			return flightTR;
+		else if(fileName == "carTable")
+			return carTR;
+		else if(fileName == "hotelTable")
+			return hotelTR;
+		
+		return null;
 	}
 }
 
 
-if(fileName == "flights")
-	table =  (ConcurrentHashMap<String, Object>) in.readObject();
-else if(fileName == "reservationTable")
-	table =  (ConcurrentHashMap<String, HashSet<Reservation>>) in.readObject();
-else if(fileName == "flightTable")
-	table =  (ConcurrentHashMap<String, Flight>) in.readObject();
-else if(fileName == "carTable")
-	table =  (ConcurrentHashMap<String, Car>) in.readObject();
-else if(fileName == "hotelTable")
-	table =  (ConcurrentHashMap<String, Hotels>) in.readObject();
