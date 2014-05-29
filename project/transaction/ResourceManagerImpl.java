@@ -6,6 +6,7 @@ import project.transaction.bean.*;
 import java.rmi.*;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** 
  * Resource Manager for the Distributed Travel Reservation System.
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ResourceManagerImpl 
 extends java.rmi.server.UnicastRemoteObject
 implements ResourceManager {
-	
+
 	//Book keeping and other variables
 	private ConcurrentHashMap<Integer,Object> activeTxns;
 	private static final Object DUMMY = new Object();
@@ -35,8 +36,8 @@ implements ResourceManager {
 	private ConcurrentHashMap<String,Car> carTable;
 	private ConcurrentHashMap<String,Hotels> hotelTable;
 	private ConcurrentHashMap<String,HashSet<Reservation>> reservationTable;
-	private ConcurrentHashMap<String,Object> flights;
-	
+	private ConcurrentHashMap<String,Integer> reservedflights;
+
 	protected int xidCounter;
 
 	public static void main(String args[]) {
@@ -84,15 +85,15 @@ implements ResourceManager {
 		carTable = new ConcurrentHashMap<String, Car>();
 		hotelTable = new ConcurrentHashMap<String, Hotels>();
 		reservationTable = new ConcurrentHashMap<String, HashSet<Reservation>>();
-		flights = new ConcurrentHashMap<String,Object>();
+		reservedflights = new ConcurrentHashMap<String,Integer>();
 		xidCounter = 1;
 		activeTxnsCount = 0 ;
 	}
 
 
 	public void isValidTrxn(int xid)
-	throws InvalidTransactionException
-	{
+			throws InvalidTransactionException
+			{
 
 		if(!activeTxns.contains(xidCounter)){
 
@@ -101,7 +102,7 @@ implements ResourceManager {
 
 		return ;
 
-	}
+			}
 
 	private void updateCheckPointVariables()
 	{
@@ -150,13 +151,13 @@ implements ResourceManager {
 		if(shuttingDown.get()>0)
 			System.exit(0);
 		updateCheckPointVariables();
-		
+
 		return;
 	}
 
 	// TRANSACTION INTERFACE
 	public int start()
-	throws RemoteException {
+			throws RemoteException {
 		int temp;
 		synchronized(enteredTxnsCount)
 		{
@@ -172,22 +173,22 @@ implements ResourceManager {
 
 			}//else check if already some process is trying to stop incoming
 			if(activeTxns.contains(xidCounter)){
-						// HOW TO HANDLE THIS ?
+				// HOW TO HANDLE THIS ?
 				System.out.println("SHOULD NOT REACH: XID DUPLICATE");
 			}
 			enteredTxnsCount++;
 			temp=xidCounter++;
 		}
-			
+
 		synchronized(HashSetEmpty)
 		{
-		 activeTxns.put(temp,DUMMY);
-		 HashSetEmpty=HashSetEmpty.valueOf(false);
+			activeTxns.put(temp,DUMMY);
+			HashSetEmpty=HashSetEmpty.valueOf(false);
 		}
 		return (temp);
 	}
 
-	public void removeXID(int xid)
+	public void removeXID(int xid) throws InvalidTransactionException
 	{
 		isValidTrxn(xid);
 		synchronized(activeTxns){
@@ -201,9 +202,9 @@ implements ResourceManager {
 
 	//TODO: Remove Xid from active Transactions
 	public boolean commit(int xid)
-	throws RemoteException, 
-	TransactionAbortedException, 
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException, 
+			InvalidTransactionException {
 		System.out.println("Committing");
 		//TODO: when xid is removed from the hashset , see if the hashset becomes equal to the shuttingDown.get() value -
 		// implies there are no more useful processes left. hence can shutdown the system.
@@ -214,24 +215,24 @@ implements ResourceManager {
 
 	//TODO: Remove Xid from active Transactions
 	public void abort(int xid)
-	throws RemoteException, 
-	InvalidTransactionException {
-			//TODO: when xid is removed from the hashset , see if the hashset becomes empty, if so notify the hashSetEmpty thread.
-			//TODO: undo all the work that ahs bee done by the transaction.
+			throws RemoteException, 
+			InvalidTransactionException {
+		//TODO: when xid is removed from the hashset , see if the hashset becomes empty, if so notify the hashSetEmpty thread.
+		//TODO: undo all the work that ahs bee done by the transaction.
 		removeXID(xid);
 		return;
 	}
 
 	// ADMINISTRATIVE INTERFACE
 	public boolean addFlight(int xid, String flightNum, int numSeats, int price) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
 		String lockString = "Flight."+flightNum;
 
 		//Check if valid xid
 		isValidTrxn(xid);
-		
+
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
 				//TODO check handling
@@ -261,25 +262,22 @@ implements ResourceManager {
 	}
 
 	public boolean deleteFlight(int xid, String flightNum)
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
-		if(flights.contains(flightNum)){
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		if(reservedflights.contains(flightNum) && reservedflights.get(flightNum)!=0){
 			// Reservation on this flight exists.
 			// TODO: Abort or return false ?
 		}
-		
+
 		String lockString = "Flight."+flightNum;
 
 		//Check if valid xid
 		isValidTrxn(xid);
-		
+
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
 				//TODO check handling
-				//Handle false return value from lock
-				//Parameters are Invalid, abort the transaction here.
-				// Handle transaction aborted exception : Pass xid and "lock string" ???.
 				throw new TransactionAbortedException(xid, lockString);
 			}
 		} catch (DeadlockException e) {
@@ -291,30 +289,30 @@ implements ResourceManager {
 			// Return False ?
 			return false;
 		}
-		
+
 		flightTable.remove(flightNum);
 		return true;
 	}
-	
+
 	/*
-     * Add rooms to a location.  
-     * This should look a lot like addFlight, only keyed on a location
-     * instead of a flight number.
-     *
-     * @return true on success, false on failure.
-     *
-     * @throws RemoteException on communications failure.
-     * @throws TransactionAbortedException if transaction was aborted.
-     * @throws InvalidTransactionException if transaction id is invalid.
-     *
-     * @see #addFlight
-     */
+	 * Add rooms to a location.  
+	 * This should look a lot like addFlight, only keyed on a location
+	 * instead of a flight number.
+	 *
+	 * @return true on success, false on failure.
+	 *
+	 * @throws RemoteException on communications failure.
+	 * @throws TransactionAbortedException if transaction was aborted.
+	 * @throws InvalidTransactionException if transaction id is invalid.
+	 *
+	 * @see #addFlight
+	 */
 	public boolean addRooms(int xid, String location, int numRooms, int price) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
-					//TODO: 
-					//throw InvalidTransactionException;
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		//TODO: 
+		//throw InvalidTransactionException;
 		isValidTrxn(xid);
 
 
@@ -325,7 +323,7 @@ implements ResourceManager {
 			String lockString = "Hotels."+location;
 			if(lockManager.lock(xid, lockString, WRITE) == false){
 				return false;
-						//TODO: to Abort/ return false
+				//TODO: to Abort/ return false
 
 			}
 
@@ -346,7 +344,7 @@ implements ResourceManager {
 			}
 			return true;	
 		}catch (DeadlockException e) {
-						// TODO: Handle DeadLock !
+			// TODO: Handle DeadLock !
 			e.printStackTrace();
 			abort(xid);
 			throw new TransactionAbortedException(xid," throwing TransactionAbortedException due to deadlock");
@@ -359,25 +357,25 @@ implements ResourceManager {
 	}
 
 	/**
-     * Delete rooms from a location.
-     * This subtracts from the available room count (rooms not allocated
-     * to a customer).  It should fail if it would make the count of
-     * available rooms negative.
-     *
-     * @return true on success, false on failure.
-     *
-     * @throws RemoteException on communications failure.
-     * @throws TransactionAbortedException if transaction was aborted.
-     * @throws InvalidTransactionException if transaction id is invalid.
-     *
-     * @see #deleteFlight
-     */
+	 * Delete rooms from a location.
+	 * This subtracts from the available room count (rooms not allocated
+	 * to a customer).  It should fail if it would make the count of
+	 * available rooms negative.
+	 *
+	 * @return true on success, false on failure.
+	 *
+	 * @throws RemoteException on communications failure.
+	 * @throws TransactionAbortedException if transaction was aborted.
+	 * @throws InvalidTransactionException if transaction id is invalid.
+	 *
+	 * @see #deleteFlight
+	 */
 	public boolean deleteRooms(int xid, String location, int numRooms) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
 
-			//throw InvalidTransactionException;
+		//throw InvalidTransactionException;
 		isValidTrxn(xid);
 		try{
 			if(location==null)
@@ -399,13 +397,13 @@ implements ResourceManager {
 				data.setNumRooms(data.getnumRooms()-numRooms);
 			}
 			else{
-					// should not happen ... if it happens return false.
+				// should not happen ... if it happens return false.
 				return false;
 			}
 			return true;
 
 		}catch (DeadlockException e) {
-					// TODO: Handle DeadLock !
+			// TODO: Handle DeadLock !
 			e.printStackTrace();
 			abort(xid);
 			throw new TransactionAbortedException(xid," throwing TransactionAbortedException due to deadlock");
@@ -419,15 +417,15 @@ implements ResourceManager {
 
 
 	public boolean addCars(int xid, String location, int numCars, int price) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
-			//TODO: Check if valid xid
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		//TODO: Check if valid xid
 		String lockString = "Cars."+location;
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
-					//TODO: Handle false return value from lock
-					//Parameters are Invalid, abort the transaction here. 	
+				//TODO: Handle false return value from lock
+				//Parameters are Invalid, abort the transaction here. 	
 			}
 
 			int numAvail = numCars;
@@ -444,10 +442,10 @@ implements ResourceManager {
 				carTable.put(location, newData);
 			}
 		} catch (DeadlockException e) {
-				// TODO: Handle DeadLock !
+			// TODO: Handle DeadLock !
 			e.printStackTrace();
 		} catch (Exception e) {
-				//Throw aborted exception
+			//Throw aborted exception
 			throw new TransactionAbortedException(xid, "Transaction aborted for unknown reasons" + "MSG: " + e.getMessage());
 		}
 
@@ -455,35 +453,35 @@ implements ResourceManager {
 	}
 
 	public boolean deleteCars(int xid, String location, int numCars) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
-			//TODO: Check if valid xid
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		//TODO: Check if valid xid
 		String lockString = "Cars."+location;
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
-					//TODO: Handle false return value from lock
-					//Parameters are Invalid, abort the transaction here. 	
+				//TODO: Handle false return value from lock
+				//Parameters are Invalid, abort the transaction here. 	
 			}
 
 			if(carTable.containsKey(location)){
 				Car oldData = carTable.get(location);
 				int numCarsAvail = oldData.getNumAvail();
 				if(numCarsAvail >= numCars){
-						//Delete successfully
+					//Delete successfully
 					oldData.setNumAvail(numCarsAvail - numCars);
 					oldData.setNumCars(oldData.getNumCars() - numCars);
 				}else{
-						//TODO: Invalid parameters, abort transaction/ return false
+					//TODO: Invalid parameters, abort transaction/ return false
 				}
 			}else{
-					//TODO: no cars in the location. Abort/Ignore transaction
+				//TODO: no cars in the location. Abort/Ignore transaction
 			}
 		} catch (DeadlockException e) {
-				// TODO: Handle DeadLock !
+			// TODO: Handle DeadLock !
 			e.printStackTrace();
 		} catch (Exception e) {
-				//Throw aborted exception
+			//Throw aborted exception
 			throw new TransactionAbortedException(xid, "Transaction aborted for unknown reasons" + "MSG: " + e.getMessage());
 
 		}
@@ -493,29 +491,95 @@ implements ResourceManager {
 		return true;
 	}
 
+	// Make a new entry in Reservations Table for this Customer.
+	// If customer already exists ?
 	public boolean newCustomer(int xid, String custName) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		isValidTrxn(xid);
+
+		// Null Customer Name
+		if(custName==null)
+			return false;
+		try{
+			// Acquire Lock
+			String lockString = "Reservations." + custName;
+			if(lockManager.lock(xid, lockString, READ) == false){
+				return false;
+			}
+
+			//Check if customer already exists
+			if(reservationTable.contains(custName)){
+				//TODO: Handle duplicate Customers
+			}
+			reservationTable.put(custName, new HashSet<Reservation>());
+		}catch (DeadlockException e) {
+			// TODO: Handle DeadLock !
+			e.printStackTrace();
+			abort(xid);
+			throw new TransactionAbortedException(xid," Transaction aborted because of deadlock detected in:");
+		}
+		catch( Exception e)	{
+			e.printStackTrace();
+			abort(xid);
+			throw new TransactionAbortedException(xid, "Transaction aborted because of error detected in:"+e.getMessage());
+		}
 		return true;
 	}
 
 	public boolean deleteCustomer(int xid, String custName) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		// Null Customer Name
+		if(custName==null)
+			return false;
+		try{
+			// Acquire Lock
+			String lockString = "Reservations." + custName;
+			if(lockManager.lock(xid, lockString, READ) == false){
+				return false;
+			}
+
+			//Check if customer exists
+			if(!reservationTable.contains(custName)){
+				//TODO: Handle not existing Customers
+			}
+
+			//Over Here Customer exists
+			//Check if customer has made any flight reservations
+			HashSet<Reservation> checkForFlights = reservationTable.get(custName);
+			for (Reservation r : checkForFlights) {
+				if(r.getResType() == 1){
+					int avail = reservedflights.get(r.getResKey());
+					reservedflights.put(r.getResKey(),avail-1);
+				}
+			}
+			reservationTable.remove(custName);
+		}catch (DeadlockException e) {
+			// TODO: Handle DeadLock !
+			e.printStackTrace();
+			abort(xid);
+			throw new TransactionAbortedException(xid," Transaction aborted because of deadlock detected in:");
+		}
+		catch( Exception e)	{
+			e.printStackTrace();
+			abort(xid);
+			throw new TransactionAbortedException(xid, "Transaction aborted because of error detected in:"+e.getMessage());
+		}
 		return true;
 	}
 
 
 	// QUERY INTERFACE
 	public int queryFlight(int xid, String flightNum)
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
 		//Check for invalid xid.
 		isValidTrxn(xid);
-		
+
 		if(flightNum == null)
 			throw new InvalidTransactionException(xid, "message");
 
@@ -543,12 +607,12 @@ implements ResourceManager {
 	}
 
 	public int queryFlightPrice(int xid, String flightNum)
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
 		//Check for invalid xid.
 		isValidTrxn(xid);
-		
+
 		if(flightNum == null)
 			throw new InvalidTransactionException(xid, "message");
 
@@ -576,27 +640,27 @@ implements ResourceManager {
 	}
 
 	/**
-     * Return the number of rooms available at a location. 
-     * Implies whole deletion of the location record: all cars, all reservations.
-     * Should fail if a customer has booked a car from this location.
-     *
-     * @param xid id of transaction.
-     * @param location , cannot be null.
-     * @return 0 on 0 availability or absence of record, else return available 
-     *
-     * @throws RemoteException on communications failure.
-     * @throws TransactionAbortedException if transaction was aborted.
-     * @throws InvalidTransactionException if transaction id is invalid.
-     *
-     * @see #deleteRooms
-     * @see #deleteFlight
-     */
+	 * Return the number of rooms available at a location. 
+	 * Implies whole deletion of the location record: all cars, all reservations.
+	 * Should fail if a customer has booked a car from this location.
+	 *
+	 * @param xid id of transaction.
+	 * @param location , cannot be null.
+	 * @return 0 on 0 availability or absence of record, else return available 
+	 *
+	 * @throws RemoteException on communications failure.
+	 * @throws TransactionAbortedException if transaction was aborted.
+	 * @throws InvalidTransactionException if transaction id is invalid.
+	 *
+	 * @see #deleteRooms
+	 * @see #deleteFlight
+	 */
 	public int queryRooms(int xid, String location)
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
-	//TODO: 
-	//throw InvalidTransactionException;
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		//TODO: 
+		//throw InvalidTransactionException;
 		isValidTrxn(xid);
 
 		if(location==null)
@@ -614,7 +678,7 @@ implements ResourceManager {
 			}
 			return numAvail;	
 		}catch (DeadlockException e) {
-				// TODO: Handle DeadLock !
+			// TODO: Handle DeadLock !
 			e.printStackTrace();
 			abort(xid);
 			throw new TransactionAbortedException(xid," throwing TransactionAbortedException due to deadlock");
@@ -624,31 +688,31 @@ implements ResourceManager {
 			abort(xid);
 			throw new TransactionAbortedException(xid," throwing TransactionAbortedException due to unknown exception"+e.getMessage());
 		}
-//		return 0;
+		//		return 0;
 	}
 	/**
-     * Return the price of rooms at this location.
-     * Implies whole deletion of the location record: all cars, all reservations.
-     * Should fail if a customer has booked a car from this location.
-     *
-     * @param xid id of transaction.
-     * @param location , cannot be null.
-     * @return 0 on 0 availability or absence of record, else return actual price.
-     *
-     * @throws RemoteException on communications failure.
-     * @throws TransactionAbortedException if transaction was aborted.
-     * @throws InvalidTransactionException if transaction id is invalid.
-     *
-     * @see #deleteRooms
-     * @see #deleteFlight
-     */
+	 * Return the price of rooms at this location.
+	 * Implies whole deletion of the location record: all cars, all reservations.
+	 * Should fail if a customer has booked a car from this location.
+	 *
+	 * @param xid id of transaction.
+	 * @param location , cannot be null.
+	 * @return 0 on 0 availability or absence of record, else return actual price.
+	 *
+	 * @throws RemoteException on communications failure.
+	 * @throws TransactionAbortedException if transaction was aborted.
+	 * @throws InvalidTransactionException if transaction id is invalid.
+	 *
+	 * @see #deleteRooms
+	 * @see #deleteFlight
+	 */
 
 	public int queryRoomsPrice(int xid, String location)
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
-	//TODO: 
-	//throw InvalidTransactionException;
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		//TODO: 
+		//throw InvalidTransactionException;
 		isValidTrxn(xid);
 		if(location==null)
 			return 0;
@@ -665,7 +729,7 @@ implements ResourceManager {
 			}
 			return price;	
 		}catch (DeadlockException e) {
-				// TODO: Handle DeadLock !
+			// TODO: Handle DeadLock !
 			e.printStackTrace();
 			abort(xid);
 			throw new TransactionAbortedException(xid," throwing TransactionAbortedException due to deadlock");
@@ -675,13 +739,13 @@ implements ResourceManager {
 			abort(xid);
 			throw new TransactionAbortedException(xid," throwing TransactionAbortedException due to unknown exception"+e.getMessage());
 		}
-//		return 0;
+		//		return 0;
 	}
 
 	public int queryCars(int xid, String location)
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
 		//TODO: Check if valid xid and location null -> throw invalid transaction exception
 		String lockString = "Cars."+location;
 		try {
@@ -689,7 +753,7 @@ implements ResourceManager {
 				//TODO: Handle false return value from lock
 				//Parameters are Invalid, abort the transaction here. 	
 			}
-			
+
 			if(carTable.containsKey(location)){
 				return carTable.get(location).getNumAvail();
 			}else{
@@ -703,14 +767,14 @@ implements ResourceManager {
 			//Throw aborted exception
 			throw new TransactionAbortedException(xid, "Transaction aborted for unknown reasons" + "MSG: " + e.getMessage());
 		}
-		
+
 		return 0;
 	}
 
 	public int queryCarsPrice(int xid, String location)
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
 		//TODO: Check if valid xid
 		String lockString = "Cars."+location;
 		try {
@@ -718,7 +782,7 @@ implements ResourceManager {
 				//TODO: Handle false return value from lock
 				//Parameters are Invalid, abort the transaction here. 	
 			}
-			
+
 			if(carTable.containsKey(location)){
 				return carTable.get(location).getPrice();
 			}else{
@@ -732,26 +796,26 @@ implements ResourceManager {
 			//Throw aborted exception
 			throw new TransactionAbortedException(xid, "Transaction aborted for unknown reasons" + "MSG: " + e.getMessage());
 		}
-		
+
 		return 0;
 	}
 
 	public int queryCustomerBill(int xid, String custName)
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
 		return 0;
 	}
 
 
 	// RESERVATION INTERFACE
 	public boolean reserveFlight(int xid, String custName, String flightNum) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
 		// Check for valid xid
 		isValidTrxn(xid);
-		
+
 		String lockString = "Flight." + flightNum;
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
@@ -778,8 +842,8 @@ implements ResourceManager {
 			//No Seats Available. Flight is full
 			throw new TransactionAbortedException(xid, "No Seats Available");
 		}
-		
-		
+
+
 		Reservation newReservation = new Reservation(custName, 1, flightNum);
 		HashSet<Reservation> reservations;
 		if(reservationTable.containsKey(custName)){
@@ -798,19 +862,19 @@ implements ResourceManager {
 
 		//Sure of making a reservation
 		reservations.add(newReservation);
-		
-		//Make entry in flights because reservation is made
-		flights.put(flightNum, "dummy");
-		
+
+		//Make entry in reservedflights because reservation is made
+		reservedflights.put(flightNum, reservedflights.get(flightNum)+1);
+
 		//Decrement number of available seats
 		data.setNumAvail(avail - 1);
 		return true;
 	}
 
 	public boolean reserveCar(int xid, String custName, String location) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
 		//TODO: Check if valid xid
 		//Acquire an XLock for cars record
 		String lockString = "Cars." + location;
@@ -836,7 +900,7 @@ implements ResourceManager {
 		if(!(numCarsAvail > 0)){
 			//TODO: abort/return false
 		}
-		
+
 
 		Reservation newReservation = new Reservation(custName, 3, location);
 		HashSet<Reservation> reservations;
@@ -847,7 +911,7 @@ implements ResourceManager {
 				//TODO: Duplicate reservation. What to do??
 				//Should abort or return for sure.
 			}
-			
+
 		}else{
 			reservations = new HashSet<Reservation>();
 			reservationTable.put(custName, reservations);
@@ -859,23 +923,23 @@ implements ResourceManager {
 	}
 
 	public boolean reserveRoom(int xid, String custName, String location) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
-					//TODO: Check if valid xid
-			//Acquire an XLock for cars record
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		//TODO: Check if valid xid
+		//Acquire an XLock for cars record
 		isValidTrxn(xid);	
 		try{
 			String lockString = "Hotels." + location;
 
 			if(lockManager.lock(xid, lockString, WRITE) == false){
-					//TODO: Handle false return value from lock
-					//Parameters are Invalid, abort the transaction here. 	
+				//TODO: Handle false return value from lock
+				//Parameters are Invalid, abort the transaction here. 	
 			}
 			lockString = "Reservations."+custName;
 			if(lockManager.lock(xid, lockString, WRITE) == false){
-					//TODO: Handle false return value from lock
-					//Parameters are Invalid, abort the transaction here.
+				//TODO: Handle false return value from lock
+				//Parameters are Invalid, abort the transaction here.
 			}
 
 			int numRoomsAvail = 0;
@@ -907,7 +971,7 @@ implements ResourceManager {
 			return true;
 		}
 		catch (DeadlockException e) {
-						// TODO: Handle DeadLock !
+			// TODO: Handle DeadLock !
 			e.printStackTrace();
 			abort(xid);
 			throw new TransactionAbortedException(xid," throwing TransactionAbortedException due to deadlock");
@@ -917,14 +981,14 @@ implements ResourceManager {
 			abort(xid);
 			throw new TransactionAbortedException(xid," throwing TransactionAbortedException due to unknown exception"+e.getMessage());
 		}
-//				return true;
+		//				return true;
 	}
 
 
 
 	// TECHNICAL/TESTING INTERFACE
 	public boolean shutdown()
-	throws RemoteException {
+			throws RemoteException {
 
 		shuttingDown.incremenetAndGet();
 		stopIncoming();
@@ -934,19 +998,19 @@ implements ResourceManager {
 	}
 
 	public boolean dieNow() 
-	throws RemoteException {
+			throws RemoteException {
 		System.exit(1);
 		return true; // We won't ever get here since we exited above;
 		// but we still need it to please the compiler.
 	}
 
 	public boolean dieBeforePointerSwitch() 
-	throws RemoteException {
+			throws RemoteException {
 		return true;
 	}
 
 	public boolean dieAfterPointerSwitch() 
-	throws RemoteException {
+			throws RemoteException {
 		return true;
 	}
 

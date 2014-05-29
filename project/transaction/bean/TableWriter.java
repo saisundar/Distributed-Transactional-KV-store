@@ -1,4 +1,4 @@
-package transaction.bean;
+package project.transaction.bean;
 
 import java.io.FileOutputStream;
 import java.io.OutputStream;
