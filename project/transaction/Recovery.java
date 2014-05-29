@@ -18,7 +18,7 @@ import project.transaction.bean.TableReader;
 
 public class Recovery {
 
-	private ExecutorService restoreThreads ;
+	private ExecutorService restoreService ;
 	private Set<Callable<Integer>> callables;
 	private TableReader flightTR;
 	private TableReader carTR;
@@ -29,7 +29,7 @@ public class Recovery {
 
 	public void restoreSetup(){
 		callables = new HashSet<Callable<Integer>>();
-		restoreThreads = Executors.newFixedThreadPool(5);
+		restoreService = Executors.newFixedThreadPool(5);
 
 		flightTR = new TableReader("flightTable");
 		carTR = new TableReader("carTable");
@@ -50,7 +50,7 @@ public class Recovery {
 		boolean result = true;
 		List<Future<Integer>> futures;
 		try {
-			futures = restoreThreads.invokeAll(callables);
+			futures = restoreService.invokeAll(callables);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -76,7 +76,9 @@ public class Recovery {
 		
 		if(result == false)
 			result = restore(nTries+1);
-
+// To be commented out if same service is to be used
+/*		if(nTries == 0)
+			restoreService.shutdown();*/
 		return result;
 	}
 	
@@ -93,6 +95,10 @@ public class Recovery {
 			return hotelTR;
 		
 		return null;
+	}
+	
+	public ExecutorService getExecutorService(){
+		return restoreService;
 	}
 }
 

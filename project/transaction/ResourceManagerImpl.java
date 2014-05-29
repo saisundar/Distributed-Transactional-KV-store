@@ -5,7 +5,10 @@ import project.transaction.bean.*;
 
 import java.rmi.*;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** 
@@ -18,18 +21,22 @@ public class ResourceManagerImpl
 extends java.rmi.server.UnicastRemoteObject
 implements ResourceManager {
 
-	//Book keeping and other variables
+	//Book keeping
 	private ConcurrentHashMap<Integer,Object> activeTxns;
-	private static final Object DUMMY = new Object();
 	private LockManager lockManager;
-	private final int WRITE = 1;
-	private final int READ = 0;
 	private static volatile AtomicInteger shuttingDown = new AtomicInteger();
 	private volatile AtomicInteger committedTrxns = new  AtomicInteger();
 	private volatile int enteredTxnsCount=0;
-	private static final int CHECKPOINT_TRIGGER = 10;
 	private static Boolean stopAndWait = new Boolean(false);
 	private static Boolean HashSetEmpty = new Boolean(true);
+	private ExecutorService checkPointers ;
+	private Set<Callable<Integer>> callables;
+
+	// Other Variables
+	private static final Object DUMMY = new Object();
+	private final int WRITE = 1;
+	private final int READ = 0;
+	private static final int CHECKPOINT_TRIGGER = 10;
 	private static final int SLEEPSHUTDOWN = 5000;
 	
 	// Data Sets
@@ -1030,7 +1037,10 @@ implements ResourceManager {
 		hotelTable = (ConcurrentHashMap<String, Hotels>) recover.getTR("hotelTable").getTable();;
 		reservationTable = (ConcurrentHashMap<String, HashSet<Reservation>>) recover.getTR("reservationTable").getTable();;
 		reservedflights = (ConcurrentHashMap<String,Integer>) recover.getTR("flights").getTable();;
-
+		
+		// TO BE INCLUDED IF SAME SERVICE BEING USED
+		// checkpointService = recover.getExecutorService();
+		
 		
 	}
 }
