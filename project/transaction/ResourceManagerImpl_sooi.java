@@ -5,7 +5,13 @@ import project.transaction.bean.*;
 
 import java.rmi.*;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Callable;
 
 /** 
  * Resource Manager for the Distributed Travel Reservation System.
@@ -25,7 +31,7 @@ implements ResourceManager {
 	private final int READ = 0;
 	private static volatile AtomicInteger shuttingDown = new AtomicInteger();
 	private volatile AtomicInteger committedTrxns = new  AtomicInteger();
-	private volatile int enteredTxnsCount=0;
+	private volatile Integer enteredTxnsCount=0;
 	private static final int CHECKPOINT_TRIGGER = 10;
 	private static Boolean stopAndWait = new Boolean(false);
 	private static Boolean HashSetEmpty = new Boolean(true);
@@ -36,7 +42,9 @@ implements ResourceManager {
 	private ConcurrentHashMap<String,Hotels> hotelTable;
 	private ConcurrentHashMap<String,HashSet<Reservation>> reservationTable;
 	private ConcurrentHashMap<String,Object> flights;
-	
+	private ExecutorService checkPointers ;
+	private Set<Callable<Integer>> callables;
+ 
 	protected int xidCounter;
 
 	public static void main(String args[]) {
@@ -87,6 +95,13 @@ implements ResourceManager {
 		flights = new ConcurrentHashMap<String,Object>();
 		xidCounter = 1;
 		activeTxnsCount = 0 ;
+		callables = new HashSet<Callable<int>>();
+		checkPointers = Executors.Executors.newFixedThreadPool(5);
+		callables.add(new TableWriter(flightTable,"flightTable"));
+		callables.add(new TableWriter(carTable,"carTable"));
+		callables.add(new TableWriter(hotelTable,"hotelTable"));
+		callables.add(new TableWriter(reservationTable,"reservationTable"));
+		callables.add(new TableWriter(flights,"flights"));
 	}
 
 
@@ -122,6 +137,30 @@ implements ResourceManager {
 		}
 
 	}
+
+	private void checkPoint(int tries)
+	{
+		boolean failed=false;
+		List<Future<Integer>> futures = checkPointers.invokeAll(callables);
+
+		if(tries==3)
+			{
+				System.out.println("FATAL ERROR: Unable to commit.killing system!!!");
+				dieNow();
+			}
+
+		for(Future<Integer> future : futures){
+			if(future.get()==1)
+				{
+					System.out.println("FATAL ERROR: aiayaoooo checkpoint failed da deei!!!");
+					failed=true;
+				}
+		}
+		if(failed)checkPoint(tries+1);
+
+		//executorService.shutdown();
+	}
+
 	private void stopIncoming()
 	{
 		synchronized(stopAndWait)
@@ -146,7 +185,7 @@ implements ResourceManager {
 		//do a checkpoint always. if shutdown flag is enabled, then also shutdown the system.
 		//code for checkpointing
 
-		checkPoint();
+		checkPoint(0);
 		if(shuttingDown.get()>0)
 			System.exit(0);
 		updateCheckPointVariables();
