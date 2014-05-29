@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Description: toy implementation of the RM, for initial testing
  */
 
-public class ResourceManagerImpl 
+public class ResourceManagerImpl_sooi 
 extends java.rmi.server.UnicastRemoteObject
 implements ResourceManager {
 	
@@ -316,9 +316,6 @@ implements ResourceManager {
 					//TODO: 
 					//throw InvalidTransactionException;
 		isValidTrxn(xid);
-
-
-
 		try{
 			if(location==null)
 				return false;
@@ -326,7 +323,6 @@ implements ResourceManager {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
 				return false;
 						//TODO: to Abort/ return false
-
 			}
 
 			int numAvail = numRooms;
