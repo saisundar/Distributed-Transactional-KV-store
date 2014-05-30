@@ -79,6 +79,13 @@ public class Reservation {
 			return false;
 		return true;
 	}
+
+
+	@Override
+	public String toString() {
+		return "Reservation [customer=" + customer + ", resType=" + resType
+				+ ", resKey=" + resKey + "]";
+	}
 	
 	
 
