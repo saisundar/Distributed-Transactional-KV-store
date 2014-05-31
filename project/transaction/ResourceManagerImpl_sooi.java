@@ -2,11 +2,13 @@ package project.transaction;
 
 import project.lockmgr.*;
 import project.transaction.bean.*;
+import transaction.bean.UndoIMLog;
 
 import java.rmi.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -44,9 +46,27 @@ implements ResourceManager {
 	private ConcurrentHashMap<String,Object> flights;
 	private ExecutorService checkPointers ;
 	private Set<Callable<Integer>> callables;
- 
+	
+	//<----------UNDOING--------------------->
+	private ConcurrentHashMap<Integer,Stack<UndoIMLog> > UndoIMTable;
+	//</----------UNDOING--------------------->
+	
 	protected int xidCounter;
 
+	//<----------UNDOING--------------------->
+	private static final int empty				= 0;
+	private static final int FlightTable  		= 1;
+	private static final int CarTable 			= 2;
+	private static final int HotelTable 		= 3;
+	private static final int ReservationTable 	= 4;
+	private static final int Flights 			= 5;
+	
+	private static final int insert 			= 1;
+	private static final int delete				= 2;
+	private static final int overWrite			= 3;
+	private static final int partialInsert 		= 4;
+	//</----------UNDOING--------------------->
+	
 	public static void main(String args[]) {
 		System.setSecurityManager(new RMISecurityManager());
 
@@ -93,10 +113,16 @@ implements ResourceManager {
 		hotelTable = new ConcurrentHashMap<String, Hotels>();
 		reservationTable = new ConcurrentHashMap<String, HashSet<Reservation>>();
 		flights = new ConcurrentHashMap<String,Object>();
+		
+		//<----------UNDOING--------------------->
+		UndoIMTable = new ConcurrentHashMap<Integer,Stack<UndoIMLog>>();
+		//</----------UNDOING--------------------->
+		
 		xidCounter = 1;
 		activeTxnsCount = 0 ;
 		callables = new HashSet<Callable<int>>();
-		checkPointers = Executors.Executors.newFixedThreadPool(5);
+		checkPointers = Executors.Executors.newFixedThreadPool(5); // how many threads do we want ?
+		// this is a oconfigurable value.need to set it to optimal value.
 		callables.add(new TableWriter(flightTable,"flightTable"));
 		callables.add(new TableWriter(carTable,"carTable"));
 		callables.add(new TableWriter(hotelTable,"hotelTable"));
@@ -158,6 +184,7 @@ implements ResourceManager {
 		}
 		if(failed)checkPoint(tries+1);
 
+		return;
 		//executorService.shutdown();
 	}
 
@@ -223,6 +250,11 @@ implements ResourceManager {
 		 activeTxns.put(temp,DUMMY);
 		 HashSetEmpty=HashSetEmpty.valueOf(false);
 		}
+
+		//<----------UNDOING--------------------->
+		UndoIMTable.put(temp,new Stack<UndoIMLog>() );
+		//</----------UNDOING--------------------->
+		
 		return (temp);
 	}
 
@@ -235,6 +267,8 @@ implements ResourceManager {
 				HashSetEmpty=HashSetEmpty.valueOf(true);
 			HashSetEmpty.notify();
 		}
+
+		UndoIMTable.remove(xid);
 		return;
 	}
 
@@ -251,12 +285,122 @@ implements ResourceManager {
 		return true;
 	}
 
+//<----------UNDOING--------------------->
+	public void performUndo(UndoIMLog entry)
+	{
+
+		switch(entry.tableName)
+		{
+		case FlightTable:
+			  if(entry.operation==insert)
+			  {
+				  flightTable.remove(entry.Key);
+			  }
+			  else if(entry.operation == overWrite)
+			  {
+				  
+				  Flight oldData = (Flight)(entry.ObjPointer);
+				  Flight newData = flightTable.get(entry.Key);
+				  newData.copyFlight(oldData);
+			  }
+			  else if(entry.operation == delete)
+			  {
+				  flightTable.put(entry.Key,(Flight)(entry.ObjPointer));
+			  }
+			  break;
+		case HotelTable:
+			  if(entry.operation==insert)
+			  {
+				  hotelTable.remove(entry.Key);
+			  }
+			  else if(entry.operation == overWrite)
+			  {
+				  
+				  Hotel oldData = (Hotel)(entry.ObjPointer);
+				  Hotel newData = hotelTable.get(entry.Key);
+				  newData.copyHotel(oldData);
+			  }
+			  else if(entry.operation == delete)//not required .. not going to happen..
+			  {
+				  hotelTable.put(entry.Key,(Hotel)(entry.ObjPointer));
+			  }
+			  break;
+		case CarTable:
+			  if(entry.operation==insert)
+			  {
+				  carTable.remove(entry.Key);
+			  }
+			  else if(entry.operation == overWrite)
+			  {
+				  
+				  Car oldData = (Car)(entry.ObjPointer);
+				  Car newData = carTable.get(entry.Key);
+				  newData.copyFlight(oldData);
+			  }
+			  else if(entry.operation == delete)
+			  {
+				  carTable.put(entry.Key,(Car)(entry.ObjPointer));
+			  }
+			  break;
+		case ReservationTable:
+			  if(entry.operation==insert)
+			  {
+				  reservationTable.remove(entry.Key);
+			  }
+			  else if(entry.operation == partialInsert)
+			  {
+				  
+				  HashSet<Reservation> checkForFlights = reservationTable.get(custName);
+				  checkForFlights.remove(entry.AuxKey);
+			  }
+			  else if(entry.operation == delete)
+			  {
+				  ReservationTable.put(entry.Key,new HashSet<Reservation>());
+			  }
+			  break;
+		case Flights:
+			  if(entry.operation==insert)
+			  {
+				  flights.remove(entry.Key);
+			  }
+			  else if(entry.operation == overWrite)
+			  {
+				  
+				  Integer oldData = (Integer)(entry.ObjPointer);
+				  Integer newData = flights.get(entry.Key);
+				  newData = oldData;
+			  }
+			  else if(entry.operation == delete)
+			  {
+				 //has to be decide based on kewals design.
+			  }
+			  break;
+		default:
+			System.out.println("should not freaking happen......");
+			break;
+		}
+}
+//</----------UNDOING--------------------->
+
 	//TODO: Remove Xid from active Transactions
 	public void abort(int xid)
 	throws RemoteException, 
 	InvalidTransactionException {
 			//TODO: when xid is removed from the hashset , see if the hashset becomes empty, if so notify the hashSetEmpty thread.
 			//TODO: undo all the work that ahs bee done by the transaction.
+//<----------UNDOING--------------------->
+		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+		UndoIMLog entry = null;
+		while(!undo.empty())
+		{
+			entry = undo.pop();
+			if(entry==null)
+			{
+				System.out.println("oh my god.... ! why the f$%^ is this null?");
+			}
+			performUndo(entry);
+		}
+//</----------UNDOING--------------------->
 		removeXID(xid);
 		return;
 	}
@@ -283,9 +427,22 @@ implements ResourceManager {
 			// TODO: Handle DeadLock !
 			e.printStackTrace();
 		}
+
 		int numAvail = numSeats;
+
+		//<----------UNDOING--------------------->
+		Flight OldVal = null;
+		UndoIMLog logRec = null;
+		//</----------UNDOING--------------------->
+
 		if(flightTable.containsKey(flightNum)){
 			Flight oldData = flightTable.get(flightNum);
+
+			//<----------UNDOING--------------------->
+			OldVal = new Flight(oldData);
+			logRec = new UndoIMLog(FlightTable,overWrite,OldVal,flightNum,null);
+			//</----------UNDOING--------------------->
+
 			if(price>=0)oldData.setPrice(price);
 			numAvail = numAvail + oldData.getNumAvail();
 			oldData.setNumAvail(numAvail);
@@ -294,8 +451,19 @@ implements ResourceManager {
 		}
 		else{
 			Flight newData = new Flight(flightNum, price, numSeats, numAvail);
+
+			//<----------UNDOING--------------------->
+			logRec = new UndoIMLog(FlightTable,insert,null,flightNum,null);
+			//</----------UNDOING--------------------->
+
 			flightTable.put(flightNum, newData);
 		}
+
+		//<----------UNDOING--------------------->
+		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+		undo.push(logRec);
+		//</----------UNDOING--------------------->
+
 		return true;
 	}
 
@@ -331,7 +499,18 @@ implements ResourceManager {
 			return false;
 		}
 		
+		//<----------UNDOING--------------------->
+		Flight OldVal = flightTable.get(flightNum);
+		UndoIMLog logRec = new UndoIMLog(FlightTable,delete,OldVal,flightNum,null);;
+		//</----------UNDOING--------------------->
+
 		flightTable.remove(flightNum);
+		
+		//<----------UNDOING--------------------->
+		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+		undo.push(logRec);
+		//</----------UNDOING--------------------->
+
 		return true;
 	}
 	
@@ -364,10 +543,21 @@ implements ResourceManager {
 						//TODO: to Abort/ return false
 			}
 
+			//<----------UNDOING--------------------->
+			Hotel OldVal = null;
+			UndoIMLog logRec = null;
+			//</----------UNDOING--------------------->
+
 			int numAvail = numRooms;
 			if(hotelTable.containsKey(location)){
 
 				Hotels oldData = hotelTable.get(location);
+				
+				//<----------UNDOING--------------------->
+				OldVal = new Hotel(oldData);
+				logRec = new UndoIMLog(HotelTable,overWrite,OldVal,location,null);
+				//</----------UNDOING--------------------->
+
 				if(price>=0)oldData.setPrice(price);
 				numAvail = numAvail + oldData.getNumAvail();
 				oldData.setNumAvail(numAvail);
@@ -376,9 +566,19 @@ implements ResourceManager {
 			}
 			else{
 
+				//<----------UNDOING--------------------->
 				Hotels newData = new Hotels(location, price, numRooms, numAvail);
+				logRec = new UndoIMLog(HotelTable,insert,null,location,null);
+				//</----------UNDOING--------------------->
+
 				hotelTable.put(location, newData);
 			}
+
+			//<----------UNDOING--------------------->
+			Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+			undo.push(logRec);
+			//</----------UNDOING--------------------->
+
 			return true;	
 		}catch (DeadlockException e) {
 						// TODO: Handle DeadLock !
@@ -430,6 +630,14 @@ implements ResourceManager {
 				numAvail = data.getNumAvail();
 				if(numRooms>numAvail)
 					return false;
+
+				//<----------UNDOING--------------------->
+				Hotels OldVal = new Hotels(data);
+				UndoIMLog logRec = new UndoIMLog(HotelTable,overWrite,OldVal,location,null);;
+				Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+				undo.push(logRec);
+				//</----------UNDOING--------------------->
+
 				data.setNumAvail(numAvail-numRooms);
 				data.setNumRooms(data.getnumRooms()-numRooms);
 			}
@@ -455,6 +663,7 @@ implements ResourceManager {
 
 	public boolean addCars(int xid, String location, int numCars, int price) 
 	throws RemoteException, 
+	
 	TransactionAbortedException,
 	InvalidTransactionException {
 			//TODO: Check if valid xid
@@ -466,8 +675,20 @@ implements ResourceManager {
 			}
 
 			int numAvail = numCars;
+
+			//<----------UNDOING--------------------->
+			Car OldVal = null;
+			UndoIMLog logRec = null;
+			//</----------UNDOING--------------------->
+
 			if(carTable.containsKey(location)){
 				Car oldData = carTable.get(location);
+
+				//<----------UNDOING--------------------->
+				OldVal = new Car(oldData);
+				logRec = new UndoIMLog(CarTable,overWrite,OldVal,location,null);
+				//</----------UNDOING--------------------->
+
 				if(price>=0)oldData.setPrice(price);
 				numAvail = numAvail + oldData.getNumAvail();
 				oldData.setNumAvail(numAvail);
@@ -477,7 +698,16 @@ implements ResourceManager {
 			else{
 				Car newData = new Car(location, price, numCars, numAvail);
 				carTable.put(location, newData);
+
+				//<----------UNDOING--------------------->
+				logRec = new UndoIMLog(CarTable,insert,null,location,null);
+				//</----------UNDOING--------------------->
 			}
+				////<----------UNDOING--------------------->
+				Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+				undo.push(logRec);
+				//</----------UNDOING--------------------->
+
 		} catch (DeadlockException e) {
 				// TODO: Handle DeadLock !
 			e.printStackTrace();
@@ -506,6 +736,14 @@ implements ResourceManager {
 				int numCarsAvail = oldData.getNumAvail();
 				if(numCarsAvail >= numCars){
 						//Delete successfully
+
+				//<----------UNDOING--------------------->
+				Car OldVal = new Car(oldData);
+				UndoIMLog logRec = new UndoIMLog(CarTable,overWrite,OldVal,location,null);;
+				Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+				undo.push(logRec);
+				//</----------UNDOING--------------------->
+
 					oldData.setNumAvail(numCarsAvail - numCars);
 					oldData.setNumCars(oldData.getNumCars() - numCars);
 				}else{
@@ -522,23 +760,109 @@ implements ResourceManager {
 			throw new TransactionAbortedException(xid, "Transaction aborted for unknown reasons" + "MSG: " + e.getMessage());
 
 		}
-
-
-
 		return true;
 	}
 
+	// Make a new entry in Reservations Table for this Customer.
+	// If customer already exists ?
 	public boolean newCustomer(int xid, String custName) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		isValidTrxn(xid);
+
+		// Null Customer Name
+		if(custName==null)
+			return false;
+		try{
+			// Acquire Lock
+			String lockString = "Reservations." + custName;
+			if(lockManager.lock(xid, lockString, READ) == false){
+				return false;
+			}
+
+			//Check if customer already exists
+			//ASK KEWAL TO CHANGE THIS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+			if(!reservationTable.contains(custName)){
+			reservationTable.put(custName, new HashSet<Reservation>());
+
+			//<----------UNDOING--------------------->
+			UndoIMLog logRec = new UndoIMLog(ReservationTable,insert,null,custName,null);
+			Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+			undo.push(logRec);
+			//</----------UNDOING--------------------->
+
+			}
+			
+		}catch (DeadlockException e) {
+			// TODO: Handle DeadLock !
+			e.printStackTrace();
+			abort(xid);
+			throw new TransactionAbortedException(xid," Transaction aborted because of deadlock detected in:");
+		}
+		catch( Exception e)	{
+			e.printStackTrace();
+			abort(xid);
+			throw new TransactionAbortedException(xid, "Transaction aborted because of error detected in:"+e.getMessage());
+		}
 		return true;
 	}
 
 	public boolean deleteCustomer(int xid, String custName) 
-	throws RemoteException, 
-	TransactionAbortedException,
-	InvalidTransactionException {
+			throws RemoteException, 
+			TransactionAbortedException,
+			InvalidTransactionException {
+		// Null Customer Name
+		if(custName==null)
+			return false;
+		try{
+			// Acquire Lock
+			String lockString = "Reservations." + custName;
+			if(lockManager.lock(xid, lockString, READ) == false){
+				return false;
+			}
+
+			//Check if customer exists
+			if(!reservationTable.contains(custName)){
+				//TODO: Handle not existing Customers
+			}
+
+			//Over Here Customer exists
+			//Check if customer has made any flight reservations
+			HashSet<Reservation> checkForFlights = reservationTable.get(custName);
+
+			for (Reservation r : checkForFlights) {
+				if(r.getResType() == 1){
+					int avail = reservedflights.get(r.getResKey());
+					reservedflights.put(r.getResKey(),avail-1);
+				}
+			}
+
+			//<----------UNDOING--------------------->
+			UndoIMLog logRec = new UndoIMLog(Flights,delete,checkForFlights,custName,null);
+			Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+			undo.push(logRec);
+			//</----------UNDOING--------------------->
+
+			reservationTable.remove(custName);
+
+			//<----------UNDOING--------------------->
+			logRec = new UndoIMLog(ReservationTable,delete,null,custName,null);
+			Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+			undo.push(logRec);
+			//</----------UNDOING--------------------->
+
+		}catch (DeadlockException e) {
+			// TODO: Handle DeadLock !
+			e.printStackTrace();
+			abort(xid);
+			throw new TransactionAbortedException(xid," Transaction aborted because of deadlock detected in:");
+		}
+		catch( Exception e)	{
+			e.printStackTrace();
+			abort(xid);
+			throw new TransactionAbortedException(xid, "Transaction aborted because of error detected in:"+e.getMessage());
+		}
 		return true;
 	}
 
@@ -814,7 +1138,13 @@ implements ResourceManager {
 			throw new TransactionAbortedException(xid, "No Seats Available");
 		}
 		
-		
+		//<----------UNDOING--------------------->//entry for flights table
+		Flight oldVal = new Flight(data);
+		UndoIMLog logRec=new UndoIMLog(FlightTable,overWrite,oldVal,flightNum,null);
+		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+		undo.push(logRec);
+		//</----------UNDOING--------------------->
+
 		Reservation newReservation = new Reservation(custName, 1, flightNum);
 		HashSet<Reservation> reservations;
 		if(reservationTable.containsKey(custName)){
@@ -827,18 +1157,51 @@ implements ResourceManager {
 		}else{
 			// First reservation for this customer.
 			// Create a new hashset
+
+			//<----------UNDOING--------------------->//entry for reservations table.
+			logRec = new UndoIMLog(ReservationTable,insert,null,custName,null);
+			//<----------UNDOING--------------------->
+
 			reservations = new HashSet<Reservation>();
 			reservationTable.put(custName, reservations);
 		}
+
+		//<----------UNDOING--------------------->
+		if(logRec==null)
+			logRec = new UndoIMLog(ReservationTable,partialInsert,null,custName,newReservation);
+		undo.push(logRec);
+		//<----------UNDOING--------------------->
 
 		//Sure of making a reservation
 		reservations.add(newReservation);
 		
 		//Make entry in flights because reservation is made
-		flights.put(flightNum, "dummy");
+		if(!flights.containsKey(flightNum)
+		{
+			flights.put(flightNum,1);
+			
+			//<----------UNDOING--------------------->
+			logRec = new UndoIMLog(Flight,Insert,null,flightNum,null);
+			//<----------UNDOING--------------------->
+		}
+		else
+		{
+			
+			//<----------UNDOING--------------------->
+			Integer num=reservedflights.get(flightNum);
+			logRec = new UndoIMLog(Flight,overWrite,num,flightNum,null);
+			//<----------UNDOING--------------------->
+
+			reservedflights.put(flightNum, num+1);
+		}
 		
 		//Decrement number of available seats
 		data.setNumAvail(avail - 1);
+
+		//</----------UNDOING--------------------->
+		undo.push(logRec);
+		//</----------UNDOING--------------------->
+		
 		return true;
 	}
 
@@ -871,7 +1234,13 @@ implements ResourceManager {
 		if(!(numCarsAvail > 0)){
 			//TODO: abort/return false
 		}
-		
+
+		//<----------UNDOING--------------------->//entry for flights table
+		Car oldVal = new Car(data);
+		UndoIMLog logRec=new UndoIMLog(CarTable,overWrite,oldVal,location,null);
+		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+		undo.push(logRec);
+		//</----------UNDOING--------------------->	
 
 		Reservation newReservation = new Reservation(custName, 3, location);
 		HashSet<Reservation> reservations;
@@ -884,10 +1253,20 @@ implements ResourceManager {
 			}
 			
 		}else{
+			//<----------UNDOING--------------------->//entry for reservations table.
+			logRec = new UndoIMLog(ReservationTable,insert,null,custName,null);
+			//<----------UNDOING--------------------->
+
 			reservations = new HashSet<Reservation>();
 			reservationTable.put(custName, reservations);
 		}
 
+		//<----------UNDOING--------------------->
+		if(logRec==null)
+			logRec = new UndoIMLog(ReservationTable,partialInsert,null,custName,newReservation);
+		undo.push(logRec);
+		//<----------UNDOING--------------------->
+		
 		//Sure of making a reservation
 		reservations.add(newReservation);
 		return true;
@@ -921,6 +1300,12 @@ implements ResourceManager {
 			if(!(numRoomsAvail > 0)){
 				//TODO: abort/return false
 			}
+			//<----------UNDOING--------------------->//entry for flights table
+			Hotels oldVal = new Hotels(data);
+			UndoIMLog logRec=new UndoIMLog(HotelTable,overWrite,oldVal,location,null);
+			Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+			undo.push(logRec);
+			//</----------UNDOING--------------------->	
 
 			Reservation newReservation = new Reservation(custName, 2, location);
 			HashSet<Reservation> reservations;
@@ -933,9 +1318,19 @@ implements ResourceManager {
 				}
 
 			}else{
+				//<----------UNDOING--------------------->//entry for reservations table.
+				logRec = new UndoIMLog(ReservationTable,insert,null,custName,null);
+				//<----------UNDOING--------------------->
+
 				reservations = new HashSet<Reservation>();
 				reservationTable.put(custName, reservations);
 			}
+
+			//<----------UNDOING--------------------->
+			if(logRec==null)
+				logRec = new UndoIMLog(ReservationTable,partialInsert,null,custName,newReservation);
+			undo.push(logRec);
+			//<----------UNDOING--------------------->
 
 			//Sure of making a reservation
 			reservations.add(newReservation);
@@ -972,7 +1367,7 @@ implements ResourceManager {
 	throws RemoteException {
 		System.exit(1);
 		return true; // We won't ever get here since we exited above;
-		// but we still need it to please the compiler.
+wq34567890=		// but we still need it to please the compiler.
 	}
 
 	public boolean dieBeforePointerSwitch() 

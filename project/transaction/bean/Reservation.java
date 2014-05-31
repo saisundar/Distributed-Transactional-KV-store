@@ -14,6 +14,18 @@ public class Reservation {
 	}
 
 
+	public Reservation(Reservation orig) {
+		this.customer = orig.customer;
+		this.resType = orig.resType;
+		this.resKey = orig.resKey;
+	}
+
+	public void copyReservation(Reservation orig) {
+		this.customer = orig.customer;
+		this.resType = orig.resType;
+		this.resKey = orig.resKey;
+	}
+	
 	public String getCustomer() {
 		return customer;
 	}

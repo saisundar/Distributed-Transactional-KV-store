@@ -13,7 +13,21 @@ public class Car {
 		this.numCars = numCars;
 		this.numAvail = numAvail;
 	}
-
+	public Car(Car orig)
+	{
+		this.location = orig.location;
+		this.price = orig.price;
+		this.numCars = orig.numCars;
+		this.numAvail = orig.numAvail;
+	}
+	public void copyCar(Car orig)
+	{
+		this.location = orig.location;
+		this.price = orig.price;
+		this.numCars = orig.numCars;
+		this.numAvail = orig.numAvail;
+	}
+	
 	public String getLocation() {
 		return location;
 	}

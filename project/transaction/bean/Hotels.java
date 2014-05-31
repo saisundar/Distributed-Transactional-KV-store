@@ -15,7 +15,20 @@ public Hotels(String location, int price, int numRooms, int numAvail) {
 	this.numAvail = numAvail;
 }
 
-
+public Hotels(Hotels orig)
+{
+	this.location = orig.location;
+	this.price = orig.price;
+	this.numRooms = orig.numRooms;
+	this.numAvail = orig.numAvail;
+}
+public void copyHotels(Hotels orig)
+{
+	this.location = orig.location;
+	this.price = orig.price;
+	this.numRooms = orig.numRooms;
+	this.numAvail = orig.numAvail;
+}
 public String getLocation() {
 	return location;
 }

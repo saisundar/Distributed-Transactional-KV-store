@@ -15,6 +15,19 @@ public Flight(String flightNum, int price, int numSeats, int numAvail) {
 	this.numAvail = numAvail;
 }
 
+public Flight(Flight orig) {
+	this.flightNum = orig.flightNum;
+	this.price = orig.price;
+	this.numSeats = orig.numSeats;
+	this.numAvail = orig.numAvail;
+}	
+
+public void copyflight(Flight orig){
+	this.flightNum = orig.flightNum;
+	this.price = orig.price;
+	this.numSeats = orig.numSeats;
+	this.numAvail = orig.numAvail;
+}	
 
 public String getFlightNum() {
 	return flightNum;
