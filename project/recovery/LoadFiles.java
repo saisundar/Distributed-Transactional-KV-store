@@ -1,4 +1,4 @@
-package project.transaction;
+package project.recovery;
 
 import java.util.HashSet;
 import java.util.List;
@@ -16,7 +16,7 @@ import project.transaction.bean.Hotels;
 import project.transaction.bean.Reservation;
 import project.transaction.bean.TableReader;
 
-public class Recovery {
+public class LoadFiles {
 
 	private ExecutorService restoreService ;
 	private Set<Callable<Integer>> callables;
@@ -27,7 +27,11 @@ public class Recovery {
 	private TableReader reservedflightsTR;
 
 
-	public void restoreSetup(){
+	public LoadFiles(ExecutorService service){
+		restoreService = service;
+	}
+	
+	public void loadSetup(){
 		callables = new HashSet<Callable<Integer>>();
 		restoreService = Executors.newFixedThreadPool(5);
 
@@ -45,7 +49,7 @@ public class Recovery {
 		
 	}
 
-	public boolean restore(int nTries){
+	public boolean load(int nTries){
 
 		boolean result = true;
 		List<Future<Integer>> futures;
@@ -58,15 +62,15 @@ public class Recovery {
 		}
 		if(nTries==3)
 		{
-			System.out.println("Cannot restore files");
+			System.out.println("Cannot load files");
 			return false;
-			// Kill system : Invoke dieNow
+			// Kill system : Invoke dieNow in calling code
 		}
 
 		for(Future<Integer> future : futures){
 			try {
 				if(future.get() == 1)
-					System.out.println("Recovery Attempt: "+nTries+" Failed");
+					System.out.println("Load Attempt: "+nTries+" Failed");
 			} catch (InterruptedException | ExecutionException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -75,10 +79,7 @@ public class Recovery {
 		}
 		
 		if(result == false)
-			result = restore(nTries+1);
-// To be commented out if same service is to be used
-/*		if(nTries == 0)
-			restoreService.shutdown();*/
+			result = load(nTries+1);
 		return result;
 	}
 	
@@ -97,9 +98,6 @@ public class Recovery {
 		return null;
 	}
 	
-	public ExecutorService getExecutorService(){
-		return restoreService;
-	}
 }
 
 

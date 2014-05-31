@@ -1,6 +1,7 @@
 package project.transaction;
 
 import project.lockmgr.*;
+import project.recovery.LoadFiles;
 import project.transaction.bean.*;
 
 import java.rmi.*;
@@ -38,7 +39,7 @@ implements ResourceManager {
 	private final int READ = 0;
 	private static final int CHECKPOINT_TRIGGER = 10;
 	private static final int SLEEPSHUTDOWN = 5000;
-	
+
 	// Data Sets
 	private ConcurrentHashMap<String,Flight> flightTable;
 	private ConcurrentHashMap<String,Car> carTable;
@@ -559,9 +560,33 @@ implements ResourceManager {
 			//Check if customer has made any flight reservations
 			HashSet<Reservation> checkForFlights = reservationTable.get(custName);
 			for (Reservation r : checkForFlights) {
-				if(r.getResType() == 1){
-					int avail = reservedflights.get(r.getResKey());
+				String key = r.getResKey();
+				int numAvail = 0;
+				switch(r.getResType()){
+				case 1:
+					// Reduce number of seats reserved in reserved flights
+					int avail = reservedflights.get(key);
 					reservedflights.put(r.getResKey(),avail-1);
+					
+					// Increase number of seats available in that particular flight
+					Flight flight = flightTable.get(key);
+					numAvail = flight.getNumAvail();
+					flight.setNumAvail(numAvail+1);
+					break;
+				case 2:
+					// Increase number of rooms available in that particular Hotel Location
+					Hotels hotel = hotelTable.get(key);
+					numAvail = hotel.getNumAvail();
+					hotel.setNumAvail(numAvail+1);
+					break;
+				case 3:
+					// Increase number of cars available in that particular Car location
+					Car car = carTable.get(key);
+					numAvail = car.getNumAvail();
+					car.setNumAvail(numAvail+1);
+					break;
+				default:
+					break;
 				}
 			}
 			reservationTable.remove(custName);
@@ -1023,24 +1048,20 @@ implements ResourceManager {
 	}
 
 	//RECOVERY/ STARTUP INTERFACE
-	
-	public void recovery(){
-		Recovery recover = new Recovery();
-		recover.restoreSetup();
-		if(recover.restore(0)==false){
+
+	public void loadFiles() throws RemoteException{
+		LoadFiles loadObject = new LoadFiles(checkPointers);
+		loadObject.loadSetup();
+		if(loadObject.load(0)==false){
 			// Shut the system down
 			dieNow();
 		}
-		
-		flightTable = (ConcurrentHashMap<String, Flight>) recover.getTR("flightTable").getTable();
-		carTable = (ConcurrentHashMap<String, Car>) recover.getTR("carTable").getTable();
-		hotelTable = (ConcurrentHashMap<String, Hotels>) recover.getTR("hotelTable").getTable();;
-		reservationTable = (ConcurrentHashMap<String, HashSet<Reservation>>) recover.getTR("reservationTable").getTable();;
-		reservedflights = (ConcurrentHashMap<String,Integer>) recover.getTR("flights").getTable();;
-		
-		// TO BE INCLUDED IF SAME SERVICE BEING USED
-		// checkpointService = recover.getExecutorService();
-		
-		
+
+		flightTable = (ConcurrentHashMap<String, Flight>) loadObject.getTR("flightTable").getTable();
+		carTable = (ConcurrentHashMap<String, Car>) loadObject.getTR("carTable").getTable();
+		hotelTable = (ConcurrentHashMap<String, Hotels>) loadObject.getTR("hotelTable").getTable();;
+		reservationTable = (ConcurrentHashMap<String, HashSet<Reservation>>) loadObject.getTR("reservationTable").getTable();;
+		reservedflights = (ConcurrentHashMap<String,Integer>) loadObject.getTR("flights").getTable();;
+
 	}
 }
