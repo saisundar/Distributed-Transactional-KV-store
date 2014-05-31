@@ -188,7 +188,7 @@ implements ResourceManager {
 				}
 		}
 		if(failed)checkPoint(tries+1);
-
+		LogWriter.flush();
 		return;
 		//executorService.shutdown();
 	}
@@ -274,6 +274,7 @@ implements ResourceManager {
 		}
 
 		UndoIMTable.remove(xid);
+		lockmgr.unlockAll(xid);
 		return;
 	}
 
@@ -363,7 +364,8 @@ implements ResourceManager {
 			  }
 			  else if(entry.operation == delete)
 			  {
-				  ReservationTable.put(entry.Key,new HashSet<Reservation>());
+				  HashSet<Reservation> ref = (HashSet<Reservation>)(entry.ObjPointer);
+				  ReservationTable.put(entry.Key,ref);
 			  }
 			  break;
 		case Flights:
@@ -886,22 +888,69 @@ implements ResourceManager {
 			HashSet<Reservation> checkForFlights = reservationTable.get(custName);
 
 			for (Reservation r : checkForFlights) {
-				if(r.getResType() == 1){
-					int avail = reservedflights.get(r.getResKey());
+				String key = r.getResKey();
+				int numAvail = 0;
+				switch(r.getResType()){
+				case 1:
+					// Reduce number of seats reserved in reserved flights
+					int avail = reservedflights.get(key);
+
+					//<----------UNDOING--------------------->
+					Integer oldVal= new Integer(avail);
+					logRec = new UndoIMLog(Flights,overWrite,oldVal,key,null);
+					undo.push(logRec);
+					//</----------UNDOING--------------------->
+
 					reservedflights.put(r.getResKey(),avail-1);
+					
+					// Increase number of seats available in that particular flight
+					Flight flight = flightTable.get(key);
+
+					//<----------UNDOING--------------------->
+					Flight oldVal= new Flight(flight);
+					logRec = new UndoIMLog(FlightTable,overWrite,oldVal,key,null);
+					undo.push(logRec);
+					//</----------UNDOING--------------------->
+
+					numAvail = flight.getNumAvail();
+					flight.setNumAvail(numAvail+1);
+
+					break;
+				case 2:
+					// Increase number of rooms available in that particular Hotel Location
+					Hotels hotel = hotelTable.get(key);
+
+					//<----------UNDOING--------------------->
+					Hotels oldVal= new Hotels(hotel);
+					logRec = new UndoIMLog(HotelTable,overWrite,oldVal,key,null);
+					undo.push(logRec);
+					//</----------UNDOING--------------------->
+
+					numAvail = hotel.getNumAvail();
+					hotel.setNumAvail(numAvail+1);
+					break;
+				case 3:
+					// Increase number of cars available in that particular Car location
+					Car car = carTable.get(key);
+
+					//<----------UNDOING--------------------->
+					Car oldVal= new Car(hotel);
+					logRec = new UndoIMLog(CarTable,overWrite,oldVal,key,null);
+					undo.push(logRec);
+					//</----------UNDOING--------------------->
+
+					numAvail = car.getNumAvail();
+					car.setNumAvail(numAvail+1);
+					break;
+				default:
+					break;
 				}
 			}
-
-			//<----------UNDOING--------------------->
-			UndoIMLog logRec = new UndoIMLog(Flights,delete,checkForFlights,custName,null);
-			Stack<UndoIMLog> undo = UndoIMTable.get(xid);
-			undo.push(logRec);
-			//</----------UNDOING--------------------->
 
 			reservationTable.remove(custName);
 
 			//<----------UNDOING--------------------->
-			logRec = new UndoIMLog(ReservationTable,delete,null,custName,null);
+			logRec = new UndoIMLog(ReservationTable,delete,checkForFlights,custName,null);
 			Stack<UndoIMLog> undo = UndoIMTable.get(xid);
 			undo.push(logRec);
 			//</----------UNDOING--------------------->
