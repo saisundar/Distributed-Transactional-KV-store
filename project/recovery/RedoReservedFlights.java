@@ -4,8 +4,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RedoReservedFlights {
 
-	public RedoReservedFlights(ConcurrentHashMap<String, Integer> reservedflights) {
+	ConcurrentHashMap<String, Integer> table;
 	
+	public RedoReservedFlights(ConcurrentHashMap<String, Integer> reservedflights) {
+		table = reservedflights;
+	}
+
+	public void insert(String key) {
+		table.put(key, 1);
+	}
+
+	public void updateNumReserved(String key, int value) {
+		table.put(key, value);
 	}
 
 }

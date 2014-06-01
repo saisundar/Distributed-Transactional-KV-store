@@ -1061,7 +1061,7 @@ implements ResourceManager {
 		carTable = (ConcurrentHashMap<String, Car>) loadObject.getTR("carTable").getTable();
 		hotelTable = (ConcurrentHashMap<String, Hotels>) loadObject.getTR("hotelTable").getTable();;
 		reservationTable = (ConcurrentHashMap<String, HashSet<Reservation>>) loadObject.getTR("reservationTable").getTable();;
-		reservedflights = (ConcurrentHashMap<String,Integer>) loadObject.getTR("flights").getTable();;
+		reservedflights = (ConcurrentHashMap<String,Integer>) loadObject.getTR("reservedflights").getTable();;
 
 	}
 }

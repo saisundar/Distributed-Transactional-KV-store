@@ -148,13 +148,29 @@ public class RecoveryManager {
 					redoReservation.insert(xid[2]);
 				}
 				else if(xid[4].equals("DELETE")){
-					
+					redoReservation.delete(xid[2]);
 				}
 				else if(xid[4].equals("UPDATE")){
 					redoReservation.update(xid[2], xid[5]);
 				}
 			}
 
+			else if(xid[1].equals("ReservedFlights")){
+				if(xid[3]==null){
+					if(xid[4].equals("INSERT")){
+						redoReservedFlights.insert(xid[2]);
+					}
+					else if(xid[4].equals("DELETE")){
+	
+					}
+				}
+				else{
+					if(xid[3].equals("NumReserved")){
+						redoReservedFlights.updateNumReserved(xid[2],Integer.parseInt(xid[5]));
+					}
+
+				}
+			}
 			// Read Next line
 			nextLine = logReader.nextLine();
 		}

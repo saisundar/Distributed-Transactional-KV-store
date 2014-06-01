@@ -47,7 +47,7 @@ implements ResourceManager {
 	private ConcurrentHashMap<String,Car> carTable;
 	private ConcurrentHashMap<String,Hotels> hotelTable;
 	private ConcurrentHashMap<String,HashSet<Reservation>> reservationTable;
-	private ConcurrentHashMap<String,Object> flights;
+	private ConcurrentHashMap<String,Integer> reservedflights;
 	private ExecutorService checkPointers ;
 	private Set<Callable<Integer>> callables;
 
@@ -117,7 +117,7 @@ implements ResourceManager {
 		carTable = new ConcurrentHashMap<String, Car>();
 		hotelTable = new ConcurrentHashMap<String, Hotels>();
 		reservationTable = new ConcurrentHashMap<String, HashSet<Reservation>>();
-		flights = new ConcurrentHashMap<String,Object>();
+		reservedflights = new ConcurrentHashMap<String,Integer>();
 		
 		//<----------UNDOING--------------------->
 		UndoIMTable = new ConcurrentHashMap<Integer,Stack<UndoIMLog>>();
@@ -132,7 +132,7 @@ implements ResourceManager {
 		callables.add(new TableWriter(carTable,"carTable"));
 		callables.add(new TableWriter(hotelTable,"hotelTable"));
 		callables.add(new TableWriter(reservationTable,"reservationTable"));
-		callables.add(new TableWriter(flights,"flights"));
+		callables.add(new TableWriter(reservedflights,"reservedflights"));
 	}
 
 
@@ -365,19 +365,19 @@ implements ResourceManager {
 			  else if(entry.operation == delete)
 			  {
 				  HashSet<Reservation> ref = (HashSet<Reservation>)(entry.ObjPointer);
-				  ReservationTable.put(entry.Key,ref);
+				  reservationTable.put(entry.Key,ref);
 			  }
 			  break;
 		case Flights:
 			  if(entry.operation==insert)
 			  {
-				  flights.remove(entry.Key);
+				  reservedflights.remove(entry.Key);
 			  }
 			  else if(entry.operation == overWrite)
 			  {
 				  
 				  Integer oldData = (Integer)(entry.ObjPointer);
-				  Integer newData = flights.get(entry.Key);
+				  Integer newData = reservedflights.get(entry.Key);
 				  newData = oldData;
 			  }
 			  else if(entry.operation == delete)
@@ -496,7 +496,7 @@ implements ResourceManager {
 	throws RemoteException, 
 	TransactionAbortedException,
 	InvalidTransactionException {
-		if(flights.contains(flightNum)){
+		if(reservedflights.contains(flightNum) && reservedflights.get(flightNum)!=0){
 			// Reservation on this flight exists.
 			// TODO: Abort or return false ?
 		}
@@ -572,7 +572,7 @@ implements ResourceManager {
 
 			}
 			//<----------UNDOING--------------------->
-			Hotel OldVal = null;
+			Hotels OldVal = null;
 			UndoIMLog logRec = null;
 			//</----------UNDOING--------------------->
 
@@ -583,7 +583,7 @@ implements ResourceManager {
 				Hotels oldData = hotelTable.get(location);
 				
 				//<----------UNDOING--------------------->
-				OldVal = new Hotel(oldData);
+				OldVal = new Hotels(oldData);
 				logRec = new UndoIMLog(HotelTable,overWrite,OldVal,location,null);
 				//</----------UNDOING--------------------->
 
@@ -838,7 +838,6 @@ implements ResourceManager {
 			}
 
 			//Check if customer already exists
-			//ASK KEWAL TO CHANGE THIS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 			if(!reservationTable.contains(custName)){
 			reservationTable.put(custName, new HashSet<Reservation>());
 
@@ -847,6 +846,9 @@ implements ResourceManager {
 			Stack<UndoIMLog> undo = UndoIMTable.get(xid);
 			undo.push(logRec);
 			//</----------UNDOING--------------------->
+			StringBuilder logMsg = new StringBuilder("");
+			logMsg.append(xid).append("@#@").append("Reservations@#@").append(custName).append("@#@@#@INSERT\n");
+			executor.execute(new VariableLogger(logMsg.toString()));
 
 			}
 			
@@ -901,7 +903,7 @@ implements ResourceManager {
 					undo.push(logRec);
 					//</----------UNDOING--------------------->
 
-					reservedflights.put(r.getResKey(),avail-1);
+					reservedflights.put(key,avail-1);
 					logMsg.append(xid).append("@#@").append("ReservedFlights@#@").append(key).append("@#@").append("NumReserved@#@").append(avail).append("@#@").append(avail-1).append("\n");
 					//TODO: what if the avail - 1 == 0. Should we delete the map entry?
 					
@@ -1273,6 +1275,7 @@ implements ResourceManager {
 
 			reservations = new HashSet<Reservation>();
 			reservationTable.put(custName, reservations);
+			logMsg.append(xid).append("@#@").append("Reservations@#@").append(custName).append("@#@@#@INSERT\n");
 		}
 
 		//<----------UNDOING--------------------->
@@ -1283,12 +1286,12 @@ implements ResourceManager {
 
 		//Sure of making a reservation
 		reservations.add(newReservation);
-		logMsg.append(xid).append("@#@").append("Reservations@#@").append(newReservation.toString()).append("@#@@#@INSERT\n");
+		logMsg.append(xid).append("@#@").append("Reservations@#@").append(custName).append("@#@@#@UPDATE").append(newReservation.toString()+"\n");
 		
-		//Make entry in flights because reservation is made
-		if(!flights.containsKey(flightNum)
+		//Make entry in reservedflights because reservation is made
+		if(!reservedflights.containsKey(flightNum))
 		{
-			flights.put(flightNum,1);
+			reservedflights.put(flightNum,1);
 			logMsg.append(xid).append("@#@").append("ReservedFlights@#@").append(flightNum).append("@#@@#@INSERT\n");
 			logMsg.append(xid).append("@#@").append("ReservedFlights@#@").append(flightNum).append("@#@").append("NumReserved@#@").append("NULL").append("@#@").append("1").append("\n");
 			//<----------UNDOING--------------------->
@@ -1349,7 +1352,7 @@ implements ResourceManager {
 			//TODO: abort/return false
 		}
 
-		//<----------UNDOING--------------------->//entry for flights table
+		//<----------UNDOING--------------------->//entry for reservedflights table
 		Car oldVal = new Car(data);
 		UndoIMLog logRec=new UndoIMLog(CarTable,overWrite,oldVal,location,null);
 		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
@@ -1374,6 +1377,7 @@ implements ResourceManager {
 
 			reservations = new HashSet<Reservation>();
 			reservationTable.put(custName, reservations);
+			logMsg.append(xid).append("@#@").append("Reservations@#@").append(custName).append("@#@@#@INSERT\n");
 		}
 
 		//<----------UNDOING--------------------->
@@ -1384,7 +1388,7 @@ implements ResourceManager {
 		
 		//Sure of making a reservation
 		reservations.add(newReservation);
-		logMsg.append(xid).append("@#@").append("Reservations@#@").append(newReservation.toString()).append("@#@@#@INSERT\n");
+		logMsg.append(xid).append("@#@").append("Reservations@#@").append(custName).append("@#@@#@UPDATE").append(newReservation.toString()+"\n");
 		data.setNumAvail(numCarsAvail - 1);
 		logMsg.append(xid).append("@#@").append("Cars@#@").append(location).append("@#@").append("NumAvail@#@").append(numCarsAvail).append("@#@").append(numCarsAvail - 1).append("\n");
 		executor.execute(new VariableLogger(logMsg.toString()));
@@ -1444,6 +1448,8 @@ implements ResourceManager {
 
 				reservations = new HashSet<Reservation>();
 				reservationTable.put(custName, reservations);
+				logMsg.append(xid).append("@#@").append("Reservations@#@").append(custName).append("@#@@#@INSERT\n");
+
 			}
 
 			//<----------UNDOING--------------------->
@@ -1454,7 +1460,7 @@ implements ResourceManager {
 
 			//Sure of making a reservation
 			reservations.add(newReservation);
-			logMsg.append(xid).append("@#@").append("Reservations@#@").append(newReservation.toString()).append("@#@@#@INSERT\n");
+			logMsg.append(xid).append("@#@").append("Reservations@#@").append(custName).append("@#@@#@UPDATE").append(newReservation.toString()+"\n");
 			data.setNumAvail(numRoomsAvail - 1);
 			logMsg.append(xid).append("@#@").append("Rooms@#@").append(location).append("@#@").append("NumAvail@#@").append(numRoomsAvail).append("@#@").append(numRoomsAvail - 1).append("\n");
 			executor.execute(new VariableLogger(logMsg.toString()));
