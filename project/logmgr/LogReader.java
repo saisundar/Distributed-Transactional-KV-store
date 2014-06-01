@@ -1,23 +1,19 @@
 package project.logmgr;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
 public class LogReader {
 
-private static BufferedReader fr;
-	
-	static{
-		try {
-			fr = new BufferedReader(new FileReader("/undo-redo.log"));
-		} catch (IOException e) {
-			System.out.println("Error creating the log file");
-		}
+	private BufferedReader fr;
+
+	public void loadFile() throws FileNotFoundException{
+		fr = new BufferedReader(new FileReader("/undo-redo.log"));
 	}
 
-	
-	public String read(){
+	public String nextLine(){
 		String line = null;
 		try {
 			line = fr.readLine();
@@ -26,14 +22,14 @@ private static BufferedReader fr;
 		}
 		return line;
 	}
-	
-	
-	public static void close(){
+
+
+	public void close(){
 		try {
 			fr.close();
 		} catch (IOException e) {
 			System.out.println("Error in closing the file");
 		}
 	}
-	
+
 }
