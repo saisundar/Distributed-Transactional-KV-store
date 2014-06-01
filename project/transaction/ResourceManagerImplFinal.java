@@ -1,6 +1,7 @@
 package project.transaction;
 
 import project.lockmgr.*;
+import project.recovery.LoadFiles;
 import project.logmgr.LogWriter;
 import project.logmgr.TransactionLogger;
 import project.logmgr.VariableLogger;
@@ -11,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +27,7 @@ import java.util.concurrent.Callable;
  * Description: toy implementation of the RM, for initial testing
  */
 
-public class ResourceManagerImplAbilashMegedCopy 
+public class ResourceManagerImpl 
 extends java.rmi.server.UnicastRemoteObject
 implements ResourceManager {
 
@@ -41,13 +43,21 @@ implements ResourceManager {
 	private static final int CHECKPOINT_TRIGGER = 10;
 	private static Boolean stopAndWait = new Boolean(false);
 	private static Boolean HashSetEmpty = new Boolean(true);
+	private ExecutorService checkPointers ;
+	private Set<Callable<Integer>> callables;
+
+	// Other Variables
+	private static final Object DUMMY = new Object();
+	private final int WRITE = 1;
+	private final int READ = 0;
+	private static final int CHECKPOINT_TRIGGER = 10;
 	private static final int SLEEPSHUTDOWN = 5000;
 	// Data Sets
 	private ConcurrentHashMap<String,Flight> flightTable;
 	private ConcurrentHashMap<String,Car> carTable;
 	private ConcurrentHashMap<String,Hotels> hotelTable;
 	private ConcurrentHashMap<String,HashSet<Reservation>> reservationTable;
-	private ConcurrentHashMap<String,Object> flights;
+	private ConcurrentHashMap<String,Integer> reservedflights;
 	private ExecutorService checkPointers ;
 	private Set<Callable<Integer>> callables;
 
@@ -117,7 +127,7 @@ implements ResourceManager {
 		carTable = new ConcurrentHashMap<String, Car>();
 		hotelTable = new ConcurrentHashMap<String, Hotels>();
 		reservationTable = new ConcurrentHashMap<String, HashSet<Reservation>>();
-		flights = new ConcurrentHashMap<String,Object>();
+		reservedflights = new ConcurrentHashMap<String,Integer>();
 
 		//<----------UNDOING--------------------->
 		UndoIMTable = new ConcurrentHashMap<Integer,Stack<UndoIMLog>>();
@@ -227,7 +237,7 @@ implements ResourceManager {
 			{
 				try{
 
-					stopAndWait.wait();
+					HashSetEmpty.wait();
 				}
 				catch(InterruptedException e)
 				{
@@ -544,7 +554,7 @@ implements ResourceManager {
 			throws RemoteException, 
 			TransactionAbortedException,
 			InvalidTransactionException {
-		if(flights.contains(flightNum)){
+		if(reservedflights.contains(flightNum) && reservedflights.get(flightNum)!=0){
 			// Reservation on this flight exists.
 			// TODO: Abort or return false ?
 		}
@@ -944,7 +954,7 @@ implements ResourceManager {
 				switch(r.getResType()){
 				case 1:
 					// Reduce number of seats reserved in reserved flights
-					int avail = (Integer)flights.get(key);
+					int avail = (Integer)reservedflights.get(key);
 
 					//<----------UNDOING--------------------->
 					Integer oldVal= new Integer(avail);
@@ -952,7 +962,7 @@ implements ResourceManager {
 					undo.push(logRec);
 					//</----------UNDOING--------------------->
 
-					flights.put(r.getResKey(),avail-1);
+					reservedsflights.put(r.getResKey(),avail-1);
 
 					// Increase number of seats available in that particular flight
 					Flight flight = flightTable.get(key);
@@ -1344,11 +1354,11 @@ implements ResourceManager {
 		{
 
 			//<----------UNDOING--------------------->
-			Integer num=(Integer)flights.get(flightNum);
+			Integer num=(Integer)reservedflights.get(flightNum);
 			logRec = new UndoIMLog(FlightTable,overWrite,num,flightNum,null);
 			//<----------UNDOING--------------------->
 
-			flights.put(flightNum, num+1);
+			reservedflights.put(flightNum, num+1);
 		}
 
 		//Decrement number of available seats
@@ -1556,6 +1566,21 @@ implements ResourceManager {
 		return true;
 	}
 
+	//RECOVERY/ STARTUP INTERFACE
+
+	public void loadFiles() throws RemoteException{
+		LoadFiles loadObject = new LoadFiles(checkPointers);
+		loadObject.loadSetup();
+		if(loadObject.load(0)==false){
+			// Shut the system down
+			dieNow();
+		}
+
+		flightTable = (ConcurrentHashMap<String, Flight>) loadObject.getTR("flightTable").getTable();
+		carTable = (ConcurrentHashMap<String, Car>) loadObject.getTR("carTable").getTable();
+		hotelTable = (ConcurrentHashMap<String, Hotels>) loadObject.getTR("hotelTable").getTable();;
+		reservationTable = (ConcurrentHashMap<String, HashSet<Reservation>>) loadObject.getTR("reservationTable").getTable();;
+		reservedflights = (ConcurrentHashMap<String,Integer>) loadObject.getTR("reservedflights").getTable();;
+
+	}
 }
-
-
