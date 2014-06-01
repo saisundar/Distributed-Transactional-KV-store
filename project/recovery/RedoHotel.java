@@ -30,7 +30,7 @@ public class RedoHotel {
 		value.setNumAvail(numAvail);
 	}
 
-	public void updateNumSeats(String key, int numRooms) {
+	public void updateNumRooms(String key, int numRooms) {
 		Hotels value = table.get(key);
 		value.setNumRooms(numRooms);
 	}

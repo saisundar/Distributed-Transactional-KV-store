@@ -32,7 +32,7 @@ public class RedoCar {
 		value.setNumAvail(numAvail);
 	}
 
-	public void updateNumSeats(String key, int numCars) {
+	public void updateNumCars(String key, int numCars) {
 		Car value = table.get(key);
 		value.setNumCars(numCars);
 	}

@@ -58,10 +58,16 @@ public class RecoveryManager {
 		String nextLine = logReader.nextLine();
 		while(nextLine != null){
 			// The Log is commit, abort or start
-			if(!nextLine.contains("@#@"))continue;
+			if(!nextLine.contains("@#@")){
+				nextLine = logReader.nextLine();
+				continue;
+			}
 			String[] xid = nextLine.split("@#@");
 			// The transaction is not committed. No need to redo(unod has handled it)
-			if(!comtdTxns.contains(Integer.parseInt(xid[0])))continue;
+			if(!comtdTxns.contains(Integer.parseInt(xid[0]))){
+				nextLine = logReader.nextLine();
+				continue;
+			}
 
 			// PERFORM REDO
 
@@ -87,20 +93,66 @@ public class RecoveryManager {
 
 				}
 			}
-			
+
 			// REDO for Cars
 			else if(xid[1].equals("Cars")){
+				if(xid[3]==null){
+					if(xid[4].equals("INSERT")){
+						redoCar.insert(xid[2]);
+					}
+					else if(xid[4].equals("DELETE")){
+						redoCar.delete(xid[2]);
+					}
+				}
+				else{
+					if(xid[3].equals("Price")){
+						redoCar.updatePrice(xid[2],Integer.parseInt(xid[5]));
+					}
+					else if(xid[3].equals("NumAvail")){
+						redoCar.updateNumAvail(xid[2],Integer.parseInt(xid[5]));
+					}
+					else if(xid[3].equals("NumCars")){
+						redoCar.updateNumCars(xid[2],Integer.parseInt(xid[5]));
+					}
 
+				}
 			}
-			
+
 			// REDO for Hotels
 			else if(xid[1].equals("Rooms")){
+				if(xid[3]==null){
+					if(xid[4].equals("INSERT")){
+						redoHotel.insert(xid[2]);
+					}
+					else if(xid[4].equals("DELETE")){
+						redoHotel.delete(xid[2]);
+					}
+				}
+				else{
+					if(xid[3].equals("Price")){
+						redoHotel.updatePrice(xid[2],Integer.parseInt(xid[5]));
+					}
+					else if(xid[3].equals("NumAvail")){
+						redoHotel.updateNumAvail(xid[2],Integer.parseInt(xid[5]));
+					}
+					else if(xid[3].equals("NumRooms")){
+						redoHotel.updateNumRooms(xid[2],Integer.parseInt(xid[5]));
+					}
 
+				}
 			}
-			
+
 			// REDO for Reservations
 			else if(xid[1].equals("Reservations")){
-
+				if(xid[4].equals("INSERT")){
+					redoReservation.insert(xid[2]);
+				}
+				else if(xid[4].equals("DELETE")){
+					
+				}
+				else if(xid[4].equals("UPDATE")){
+					redoReservation.update(xid[2], xid[5]);
+				}
 			}
 
 			// Read Next line

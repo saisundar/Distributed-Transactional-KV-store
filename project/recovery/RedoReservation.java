@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import project.transaction.bean.Flight;
 import project.transaction.bean.Reservation;
+import project.transaction.bean.UndoIMLog;
 
 public class RedoReservation {
 	
@@ -15,27 +16,19 @@ public class RedoReservation {
 	}
 	
 	public void insert(String key) {
-		Flight value = new Flight(key,0,0,0);
+		HashSet<Reservation> value = new HashSet<Reservation>();
 		table.put(key, value);
 	}
 
 	public void delete(String key) {
 		table.remove(key);
 	}
-
-	public void updatePrice(String key, int price) {
-		Flight value = table.get(key);
-		value.setPrice(price);
-	}
-
-	public void updateNumAvail(String key, int numAvail) {
-		Flight value = table.get(key);
-		value.setNumAvail(numAvail);
-	}
-
-	public void updateNumSeats(String key, int numSeats) {
-		Flight value = table.get(key);
-		value.setNumSeats(numSeats);
+	
+	public void update(String key, String value){
+		String[] fields = value.split("#@#");
+		Reservation r = new Reservation(fields[0],Integer.parseInt(fields[1]), fields[2]);
+		HashSet<Reservation> reservations = table.get(key);
+		reservations.add(r);
 	}
 	
 }
