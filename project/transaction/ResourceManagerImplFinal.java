@@ -33,18 +33,15 @@ implements ResourceManager {
 
 	//Book keeping and other variables
 	private ConcurrentHashMap<Integer,Object> activeTxns;
-	private static final Object DUMMY = new Object();
 	private LockManager lockManager;
-	private final int WRITE = 1;
-	private final int READ = 0;
 	private static volatile AtomicInteger shuttingDown = new AtomicInteger();
 	private volatile AtomicInteger committedTrxns = new  AtomicInteger();
 	private volatile Integer enteredTxnsCount=0;
-	private static final int CHECKPOINT_TRIGGER = 10;
 	private static Boolean stopAndWait = new Boolean(false);
 	private static Boolean HashSetEmpty = new Boolean(true);
 	private ExecutorService checkPointers ;
 	private Set<Callable<Integer>> callables;
+	private ExecutorService executor ;
 
 	// Other Variables
 	private static final Object DUMMY = new Object();
@@ -52,16 +49,14 @@ implements ResourceManager {
 	private final int READ = 0;
 	private static final int CHECKPOINT_TRIGGER = 10;
 	private static final int SLEEPSHUTDOWN = 5000;
+
 	// Data Sets
 	private ConcurrentHashMap<String,Flight> flightTable;
 	private ConcurrentHashMap<String,Car> carTable;
 	private ConcurrentHashMap<String,Hotels> hotelTable;
 	private ConcurrentHashMap<String,HashSet<Reservation>> reservationTable;
 	private ConcurrentHashMap<String,Integer> reservedflights;
-	private ExecutorService checkPointers ;
-	private Set<Callable<Integer>> callables;
 
-	private ExecutorService executor ;
 	//<----------UNDOING--------------------->
 	private ConcurrentHashMap<Integer,Stack<UndoIMLog> > UndoIMTable;
 	//</----------UNDOING--------------------->
@@ -135,13 +130,16 @@ implements ResourceManager {
 
 		xidCounter = 1;
 		callables = new HashSet<Callable<Integer>>();
-		checkPointers = Executors.newFixedThreadPool(5); // how many threads do we want ?
-		// this is a oconfigurable value.need to set it to optimal value.
+		
+		// How many threads do we want ?
+		// This is a configurable value. Need to set it to optimal value.
+		checkPointers = Executors.newFixedThreadPool(5); 
+
 		callables.add(new TableWriter((Object)flightTable,"flightTable"));
 		callables.add(new TableWriter((Object)carTable,"carTable"));
 		callables.add(new TableWriter((Object)hotelTable,"hotelTable"));
 		callables.add(new TableWriter((Object)reservationTable,"reservationTable"));
-		callables.add(new TableWriter((Object)flights,"flights"));
+		callables.add(new TableWriter((Object)reservedflights,"flights"));
 	}
 
 
@@ -160,7 +158,7 @@ implements ResourceManager {
 
 	private void updateCheckPointVariables()
 	{
-		// if there is no shutdown , then checkpoointing is over, this means we can reset the stopAndWait flag.
+		// If there is no shutdown , then checkpointing is over, this means we can reset the stopAndWait flag.
 		committedTrxns.set(0);
 		synchronized(HashSetEmpty)
 		{
@@ -422,13 +420,13 @@ implements ResourceManager {
 		case Flights:
 			if(entry.operation==insert)
 			{
-				flights.remove(entry.Key);
+				reservedflights.remove(entry.Key);
 			}
 			else if(entry.operation == overWrite)
 			{
 
 				Integer oldData = (Integer)(entry.ObjPointer);
-				Integer newData = (Integer)flights.get(entry.Key);
+				Integer newData = (Integer)reservedflights.get(entry.Key);
 				newData = oldData;
 			}
 			else if(entry.operation == delete)
@@ -443,12 +441,11 @@ implements ResourceManager {
 	}
 	//</----------UNDOING--------------------->
 
-	//TODO: Remove Xid from active Transactions
+	//Undo all the work that has bee done by the transaction.
 	public void abort(int xid)
 			throws RemoteException, 
 			InvalidTransactionException {
-		//TODO: when xid is removed from the hashset , see if the hashset becomes empty, if so notify the hashSetEmpty thread.
-		//TODO: undo all the work that ahs bee done by the transaction.
+		//When xid is removed from the hashset , see if the hashset becomes empty, if so notify the hashSetEmpty thread: Done in removeXID.
 		//<----------UNDOING--------------------->
 		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
 		UndoIMLog entry = null;
@@ -483,19 +480,19 @@ implements ResourceManager {
 			InvalidTransactionException {
 		String lockString = "Flight."+flightNum;
 
-		//Check if valid xid
+		//Check if valid XID
 		isValidTrxn(xid);
 
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
-				//TODO check handling
-				//Handle false return value from lock
-				//Parameters are Invalid, abort the transaction here.
-				// Handle transaction aborted exception : Pass xid and "lock string" ???.
-				throw new TransactionAbortedException(xid, lockString);
+				// Abort and then throw transaction aborted exception
+				abort(xid);
+				throw new TransactionAbortedException(xid, "Lock Manager returned false while acquiring lock on: " + flightNum);
 			}
 		} catch (DeadlockException e) {
-			// TODO: Handle DeadLock !
+			// Handle DeadLock !
+			abort(xid);
+			throw new TransactionAbortedException(xid, "Aborted transaction because deadlock detected for XID: "+xid);
 			e.printStackTrace();
 		}
 
@@ -555,31 +552,26 @@ implements ResourceManager {
 			TransactionAbortedException,
 			InvalidTransactionException {
 		if(reservedflights.contains(flightNum) && reservedflights.get(flightNum)!=0){
-			// Reservation on this flight exists.
-			// TODO: Abort or return false ?
+			return false;
 		}
 
 		String lockString = "Flight."+flightNum;
 		StringBuilder logMsg = new StringBuilder("");
 
-		//Check if valid xid
+		//Check if valid XID
 		isValidTrxn(xid);
 
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
-				//TODO check handling
-				//Handle false return value from lock
-				//Parameters are Invalid, abort the transaction here.
-				// Handle transaction aborted exception : Pass xid and "lock string" ???.
-				throw new TransactionAbortedException(xid, lockString);
+				abort(xid);
+				throw new TransactionAbortedException(xid, "Lock Manager returned false while acquiring lock on: " + flightNum);
 			}
 		} catch (DeadlockException e) {
-			// TODO: Handle DeadLock !
+			abort(xid);
+			throw new TransactionAbortedException(xid, "Aborted transaction because deadlock detected for XID: "+xid);
 			e.printStackTrace();
 		}
 		if(!flightTable.contains(flightNum)){
-			// Deleting a flight which does not exist
-			// Return False ?
 			return false;
 		}
 
@@ -617,17 +609,16 @@ implements ResourceManager {
 			throws RemoteException, 
 			TransactionAbortedException,
 			InvalidTransactionException {
-		//TODO: 
-		//throw InvalidTransactionException;
+
 		isValidTrxn(xid);
 		try{
 			if(location==null)
 				return false;
 			String lockString = "Hotels."+location;
 			if(lockManager.lock(xid, lockString, WRITE) == false){
-				return false;
-				//TODO: to Abort/ return false
-
+				abort(xid);
+				throw new TransactionAbortedException(xid, "Lock Manager returned false while acquiring lock on: " + lockString);
+	
 			}
 			//<----------UNDOING--------------------->
 			Hotels OldVal = null;
@@ -766,13 +757,15 @@ implements ResourceManager {
 
 			TransactionAbortedException,
 			InvalidTransactionException {
-		//TODO: Check if valid xid
+
+		isValidTrxn(xid);		
 		String lockString = "Cars."+location;
 		StringBuilder logMsg = new StringBuilder("");
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
-				//TODO: Handle false return value from lock
-				//Parameters are Invalid, abort the transaction here. 	
+				abort(xid);
+				throw new TransactionAbortedException(xid, "Lock Manager returned false while acquiring lock on: " + lockString);
+
 			}
 
 			int numAvail = numCars;
@@ -819,11 +812,14 @@ implements ResourceManager {
 			//</----------UNDOING--------------------->
 
 		} catch (DeadlockException e) {
-			// TODO: Handle DeadLock !
 			e.printStackTrace();
+			abort(xid);
+			throw new TransactionAbortedException(xid, "Aborted transaction because deadlock detected for XID: "+xid);
+
 		} catch (Exception e) {
-			//Throw aborted exception
+			abort(xid);
 			throw new TransactionAbortedException(xid, "Transaction aborted for unknown reasons" + "MSG: " + e.getMessage());
+		
 		}
 		executor.execute(new VariableLogger(logMsg.toString()));
 		return true;
@@ -833,13 +829,13 @@ implements ResourceManager {
 			throws RemoteException, 
 			TransactionAbortedException,
 			InvalidTransactionException {
-		//TODO: Check if valid xid
+		isValidTrxn(xid);
 		String lockString = "Cars."+location;
 		StringBuilder logMsg = new StringBuilder("");
 		try {
 			if(lockManager.lock(xid, lockString, WRITE) == false){
-				//TODO: Handle false return value from lock
-				//Parameters are Invalid, abort the transaction here. 	
+				abort(xid);
+				throw new TransactionAbortedException(xid, "Lock Manager returned false while acquiring lock on: " + lockString);
 			}
 
 			if(carTable.containsKey(location)){
@@ -866,11 +862,12 @@ implements ResourceManager {
 				//TODO: no cars in the location. Abort/Ignore transaction
 			}
 		} catch (DeadlockException e) {
-			// TODO: Handle DeadLock !
+			abort(xid);
+			throw new TransactionAbortedException(xid, "Aborted transaction because deadlock detected for XID: "+xid);
 			e.printStackTrace();
 		} catch (Exception e) {
-			//Throw aborted exception
-			throw new TransactionAbortedException(xid, "Transaction aborted for unknown reasons" + "MSG: " + e.getMessage());
+			abort(xid);
+			throw new TransactionAbortedException(xid, "Aborted transaction because 'Other' Exception found: "+xid);
 
 		}
 		executor.execute(new VariableLogger(logMsg.toString()));
@@ -962,7 +959,7 @@ implements ResourceManager {
 					undo.push(logRec);
 					//</----------UNDOING--------------------->
 
-					reservedsflights.put(r.getResKey(),avail-1);
+					reservedflights.put(r.getResKey(),avail-1);
 
 					// Increase number of seats available in that particular flight
 					Flight flight = flightTable.get(key);
@@ -1342,9 +1339,9 @@ implements ResourceManager {
 		logMsg.append(xid).append("@#@").append("Reservations@#@").append(newReservation.toString()).append("@#@@#@INSERT\n");
 
 		//Make entry in flights because reservation is made
-		if(!flights.containsKey(flightNum))
+		if(!reservedflights.containsKey(flightNum))
 		{
-			flights.put(flightNum,1);
+			reservedflights.put(flightNum,1);
 
 			//<----------UNDOING--------------------->
 			logRec = new UndoIMLog(FlightTable,insert,null,flightNum,null);
