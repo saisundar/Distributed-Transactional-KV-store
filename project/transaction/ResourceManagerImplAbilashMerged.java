@@ -886,7 +886,7 @@ implements ResourceManager {
 			//Over Here Customer exists
 			//Check if customer has made any flight reservations
 			HashSet<Reservation> checkForFlights = reservationTable.get(custName);
-
+			StringBuilder logMsg = new StringBuilder("");
 			for (Reservation r : checkForFlights) {
 				String key = r.getResKey();
 				int numAvail = 0;
@@ -902,6 +902,8 @@ implements ResourceManager {
 					//</----------UNDOING--------------------->
 
 					reservedflights.put(r.getResKey(),avail-1);
+					logMsg.append(xid).append("@#@").append("ReservedFlights@#@").append(key).append("@#@").append("NumReserved@#@").append(avail).append("@#@").append(avail-1).append("\n");
+					//TODO: what if the avail - 1 == 0. Should we delete the map entry?
 					
 					// Increase number of seats available in that particular flight
 					Flight flight = flightTable.get(key);
@@ -914,7 +916,7 @@ implements ResourceManager {
 
 					numAvail = flight.getNumAvail();
 					flight.setNumAvail(numAvail+1);
-
+					logMsg.append(xid).append("@#@").append("Flights@#@").append(key).append("@#@").append("NumAvail@#@").append(numAvail).append("@#@").append(numAvail + 1).append("\n");
 					break;
 				case 2:
 					// Increase number of rooms available in that particular Hotel Location
@@ -928,6 +930,7 @@ implements ResourceManager {
 
 					numAvail = hotel.getNumAvail();
 					hotel.setNumAvail(numAvail+1);
+					logMsg.append(xid).append("@#@").append("Hotels@#@").append(key).append("@#@").append("NumAvail@#@").append(numAvail).append("@#@").append(numAvail + 1).append("\n");
 					break;
 				case 3:
 					// Increase number of cars available in that particular Car location
@@ -941,6 +944,7 @@ implements ResourceManager {
 
 					numAvail = car.getNumAvail();
 					car.setNumAvail(numAvail+1);
+					logMsg.append(xid).append("@#@").append("Cars@#@").append(key).append("@#@").append("NumAvail@#@").append(numAvail).append("@#@").append(numAvail + 1).append("\n");
 					break;
 				default:
 					break;
@@ -948,7 +952,8 @@ implements ResourceManager {
 			}
 
 			reservationTable.remove(custName);
-
+			logMsg.append(xid).append("@#@").append("Reservations@#@").append(custName).append("@#@@#@DELETE\n");
+			executor.execute(new VariableLogger(logMsg.toString()));
 			//<----------UNDOING--------------------->
 			logRec = new UndoIMLog(ReservationTable,delete,checkForFlights,custName,null);
 			Stack<UndoIMLog> undo = UndoIMTable.get(xid);
@@ -1284,7 +1289,8 @@ implements ResourceManager {
 		if(!flights.containsKey(flightNum)
 		{
 			flights.put(flightNum,1);
-			
+			logMsg.append(xid).append("@#@").append("ReservedFlights@#@").append(flightNum).append("@#@@#@INSERT\n");
+			logMsg.append(xid).append("@#@").append("ReservedFlights@#@").append(flightNum).append("@#@").append("NumReserved@#@").append("NULL").append("@#@").append("1").append("\n");
 			//<----------UNDOING--------------------->
 			logRec = new UndoIMLog(Flight,Insert,null,flightNum,null);
 			//<----------UNDOING--------------------->
@@ -1298,6 +1304,7 @@ implements ResourceManager {
 			//<----------UNDOING--------------------->
 
 			reservedflights.put(flightNum, num+1);
+			logMsg.append(xid).append("@#@").append("ReservedFlights@#@").append(flightNum).append("@#@").append("NumReserved@#@").append(num).append("@#@").append(num+1).append("\n");
 		}
 		
 		//Decrement number of available seats
