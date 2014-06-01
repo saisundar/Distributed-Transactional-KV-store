@@ -22,7 +22,7 @@ public Flight(Flight orig) {
 	this.numAvail = orig.numAvail;
 }	
 
-public void copyflight(Flight orig){
+public void copyFlight(Flight orig){
 	this.flightNum = orig.flightNum;
 	this.price = orig.price;
 	this.numSeats = orig.numSeats;

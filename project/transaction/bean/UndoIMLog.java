@@ -1,4 +1,4 @@
-package transaction.bean;
+package project.transaction.bean;
 
 public class UndoIMLog {
 	

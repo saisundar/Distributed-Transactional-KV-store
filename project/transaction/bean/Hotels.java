@@ -1,6 +1,8 @@
 package project.transaction.bean;
 
-public class Hotels {
+import java.io.Serializable;
+
+public class Hotels implements Serializable{
 private String location;
 private int price;
 private int numRooms;

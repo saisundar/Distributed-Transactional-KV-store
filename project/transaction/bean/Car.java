@@ -1,6 +1,8 @@
 package project.transaction.bean;
 
-public class Car {
+import java.io.Serializable;
+
+public class Car implements Serializable{
 	
 	private String location;
 	private int price;

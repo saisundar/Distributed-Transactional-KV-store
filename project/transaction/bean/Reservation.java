@@ -1,6 +1,8 @@
 package project.transaction.bean;
 
-public class Reservation {
+import java.io.Serializable;
+
+public class Reservation implements Serializable{
 	
 	private String customer;
 	private int resType;
@@ -95,7 +97,8 @@ public class Reservation {
 
 	@Override
 	public String toString() {
-		return customer + "#@#" + resType + "#@#" + resKey;
+		return "Reservation [customer=" + customer + ", resType=" + resType
+				+ ", resKey=" + resKey + "]";
 	}
 	
 	

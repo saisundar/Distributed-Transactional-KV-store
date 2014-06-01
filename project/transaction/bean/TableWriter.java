@@ -9,10 +9,10 @@ import de.ruedigermoeller.serialization.FSTObjectOutput;
 
 public class TableWriter implements Callable<Integer> {
 
-	private ConcurrentHashMap<String,Object> table;
+	private Object table;
 	private String fileName;
 
-	public TableWriter(ConcurrentHashMap<String, Object> table, String fileName) {
+	public TableWriter(Object table, String fileName) {
 		this.table = table;
 		this.fileName = fileName;
 	}
