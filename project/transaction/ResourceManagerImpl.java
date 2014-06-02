@@ -153,7 +153,6 @@ implements ResourceManager {
 			{
 
 		if(!activeTxns.contains(xidCounter)){
-			abort(xid);
 			throw new InvalidTransactionException(xid,"");
 		}
 
@@ -471,7 +470,7 @@ implements ResourceManager {
 			{
 				retries--;
 				System.out.println("retyring the aborttion of the last operation");
-				System.out.println("retry number"+3-retries);
+				System.out.println("retry number"+(3-retries));
 				continue;
 			}
 			undo.pop();
