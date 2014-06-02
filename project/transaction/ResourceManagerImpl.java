@@ -1291,7 +1291,6 @@ implements ResourceManager {
 			HashSet<Reservation> checkForFlights = reservationTable.get(custName);
 			for (Reservation r : checkForFlights) {
 				String key = r.getResKey();
-				int numAvail = 0;
 				switch(r.getResType()){
 				case 1:
 					lockString = "Flight." + key;
@@ -1361,7 +1360,6 @@ implements ResourceManager {
 			abort(xid);
 			throw new TransactionAbortedException(xid, "Aborted transaction because deadlock detected for XID: "+xid);
 		}
-		int numAvail = 0;
 		if(!flightTable.contains(flightNum)){
 			return false;
 		}
@@ -1376,6 +1374,7 @@ implements ResourceManager {
 		UndoIMLog logRec=new UndoIMLog(FlightTable,overWrite,oldVal,flightNum,null);
 		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
 		undo.push(logRec);
+		logRec=null;
 		//</----------UNDOING--------------------->
 
 		Reservation newReservation = new Reservation(custName, 1, flightNum);
@@ -1477,6 +1476,7 @@ implements ResourceManager {
 		UndoIMLog logRec=new UndoIMLog(CarTable,overWrite,oldVal,location,null);
 		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
 		undo.push(logRec);
+		logRec = null;
 		//</----------UNDOING--------------------->	
 
 		Reservation newReservation = new Reservation(custName, 3, location);
@@ -1545,6 +1545,7 @@ implements ResourceManager {
 			UndoIMLog logRec=new UndoIMLog(HotelTable,overWrite,oldVal,location,null);
 			Stack<UndoIMLog> undo = UndoIMTable.get(xid);
 			undo.push(logRec);
+			logRec = null;
 			//</----------UNDOING--------------------->	
 
 			Reservation newReservation = new Reservation(custName, 2, location);
