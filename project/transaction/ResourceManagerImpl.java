@@ -153,7 +153,7 @@ implements ResourceManager {
 			{
 
 		if(!activeTxns.contains(xidCounter)){
-
+			abort(xid);
 			throw new InvalidTransactionException(xid,"");
 		}
 
@@ -453,15 +453,28 @@ implements ResourceManager {
 		//When xid is removed from the hashset , see if the hashset becomes empty, if so notify the hashSetEmpty thread: Done in removeXID.
 		//<----------UNDOING--------------------->
 		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
+		int retries=3;
 		UndoIMLog entry = null;
-		while(!undo.empty())
+		while(!undo.empty() && retries>0)
 		{
-			entry = undo.peek();
-			if(entry==null)
+			
+			try
 			{
-				System.out.println("oh my god.... ! why the f$%^ is this null?");
+				entry = undo.peek();
+				if(entry==null)
+				{
+					System.out.println("oh my god.... ! why the f$%^ is this null?");
+				}
+				performUndo(entry);
 			}
-			performUndo(entry);
+			catch(Exception e)
+			{
+				retries--;
+				System.out.println("retyring the aborttion of the last operation");
+				System.out.println("retry number"+3-retries);
+				continue;
+			}
+			undo.pop();
 		}
 		//</----------UNDOING--------------------->
 		removeXID(xid);
@@ -477,7 +490,7 @@ implements ResourceManager {
 		LogWriter.flush();
 		return;
 	}
-
+	
 	// ADMINISTRATIVE INTERFACE
 	public boolean addFlight(int xid, String flightNum, int numSeats, int price) 
 			throws RemoteException, 
