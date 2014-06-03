@@ -1,4 +1,4 @@
-package project.lockmgr;
+package lockmgr;
 
 /*
 	The transaction requested a lock that it already had.

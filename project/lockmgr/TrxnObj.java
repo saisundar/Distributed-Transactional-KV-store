@@ -1,4 +1,4 @@
-package project.lockmgr;
+package lockmgr;
 
 public class TrxnObj extends XObj
 {

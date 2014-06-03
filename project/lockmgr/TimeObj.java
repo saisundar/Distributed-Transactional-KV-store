@@ -1,4 +1,4 @@
-package project.lockmgr;
+package lockmgr;
 
 import java.util.Date;
 
