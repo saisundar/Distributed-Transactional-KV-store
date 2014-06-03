@@ -1,6 +1,7 @@
 #!/bin/tcsh
 
 make clean
+rm -f ../test.part1/results/*
 make server
 make client
 rmiregistry -J-classpath -J.. 2100 &

@@ -127,7 +127,7 @@ implements ResourceManager {
 		hotelTable = new ConcurrentHashMap<String, Hotels>();
 		reservationTable = new ConcurrentHashMap<String, HashSet<Reservation>>();
 		reservedflights = new ConcurrentHashMap<String,Integer>();
-
+		executor = Executors.newSingleThreadExecutor();
 		//<----------UNDOING--------------------->
 		UndoIMTable = new ConcurrentHashMap<Integer,Stack<UndoIMLog>>();
 		//</----------UNDOING--------------------->
@@ -151,10 +151,14 @@ implements ResourceManager {
 	public void isValidTrxn(int xid)
 			throws InvalidTransactionException
 			{
-
-		if(!activeTxns.contains(xid)){
+		System.out.println("No of active transactions: " + activeTxns.size());
+		System.out.println(xid + ": " + activeTxns.get(xid));
+		System.out.println(activeTxns.contains(xid));
+		if(activeTxns.get(xid) == null){
+			System.out.println("Throwing the Invalid Txn Exception");
 			throw new InvalidTransactionException(xid,"");
 		}
+		System.out.println("Transaction is valid");
 
 		return ;
 
@@ -316,14 +320,24 @@ implements ResourceManager {
 	{
 		isValidTrxn(xid);
 		synchronized(activeTxns){
+			System.out.println("About the remove entry from hashmap");
 			activeTxns.remove(xid);
-			if(activeTxns.size()==shuttingDown.get())
+			System.out.println("Done removing from hashmap");
+			if(activeTxns.size()==shuttingDown.get()){
+				System.out.println("active transactions are virtually empty");
 				HashSetEmpty=HashSetEmpty.valueOf(true);
-			HashSetEmpty.notify();
+			}
+			System.out.println("Notifying");
+			synchronized(HashSetEmpty){
+				HashSetEmpty.notify();
+			}
+			System.out.println("Notified");
 		}
-
+		System.out.println("About the remove xid from UndoIMTable");
 		UndoIMTable.remove(xid);
+		System.out.println("Releasing all the locks");
 		lockManager.unlockAll(xid);
+		System.out.println("Returning from removeXID method");
 		return;
 	}
 
@@ -347,7 +361,7 @@ implements ResourceManager {
 		}
 		LogWriter.flush();
 		removeXID(xid);
-
+		System.out.println("Done commiting");
 		return true;
 	}
 
