@@ -13,7 +13,7 @@ public class TransactionLogger implements Callable<Boolean> {
 	@Override
 	public Boolean call() throws Exception {
 		LogWriter.write(logMsg);
-		return null;
+		return false;
 	}
 	
 

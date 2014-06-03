@@ -9,6 +9,7 @@ public class LogWriter {
 	
 	static{
 		try {
+			System.out.println("Creating UNDI-REDO log file");
 			fw = new FileWriter("/undo-redo.log");
 		} catch (IOException e) {
 			System.out.println("Error creating the log file");
@@ -27,8 +28,11 @@ public class LogWriter {
 	public static void flush(){
 		try {
 			fw.flush();
+			System.out.println("Flushed the disk logs");
 		} catch (IOException e) {
 			System.out.println("Error in flushing the log file");
+		} catch (Exception e){
+			System.out.println("Should not come here "+e);
 		}
 	}
 	
