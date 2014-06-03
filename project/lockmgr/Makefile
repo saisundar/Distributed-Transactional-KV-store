@@ -1,4 +1,4 @@
-PROJECTROOT = ..
+PROJECTROOT = ../..
 
 lockmgr : DataObj.class DeadlockException.class LockManager.class RedundantLockRequestException.class TimeObj.class TPHashTable.class TrxnObj.class WaitObj.class XObj.class
 

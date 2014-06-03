@@ -1,0 +1,7 @@
+1
+1 call dieNow
+1 except java.rmi.RemoteException 
+1 launch
+1 call start
+1 return
+1 exit

@@ -1,12 +1,11 @@
 RMIREGPORT = 2100
-PROJECTROOT = ..
+PROJECTROOT = ./*:../..
 
 all : server client
 
 server : InvalidTransactionException.class \
          ResourceManager.class \
          ResourceManagerImpl.class \
-         ResourceManagerImpl_Stub.class \
          TransactionAbortedException.class
 
 client: Client.class
