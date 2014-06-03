@@ -119,6 +119,7 @@ implements ResourceManager {
 	//i) Add volatile to some variables
 
 	public ResourceManagerImpl() throws RemoteException {
+		log.debug("starting constructor");
 		lockManager = new LockManager();
 		activeTxns = new ConcurrentHashMap<Integer,Object>();
 		flightTable = new ConcurrentHashMap<String, Flight>();
@@ -143,6 +144,7 @@ implements ResourceManager {
 		callables.add(new TableWriter((Object)hotelTable,"hotelTable"));
 		callables.add(new TableWriter((Object)reservationTable,"reservationTable"));
 		callables.add(new TableWriter((Object)reservedflights,"flights"));
+		log.debug("closing conbstructor");
 	}
 
 
@@ -265,11 +267,13 @@ implements ResourceManager {
 		int temp;
 		synchronized(enteredTxnsCount)
 		{
+			log.debug("entering start");
 			synchronized(stopAndWait)
 			{
 				while(stopAndWait)
 				{
 					try{
+						log.debug("waiting on stopAndWait");
 						stopAndWait.wait();
 					}
 					catch(InterruptedException e)
@@ -284,7 +288,7 @@ implements ResourceManager {
 			if(enteredTxnsCount>=CHECKPOINT_TRIGGER && committedTrxns.get() >= (CHECKPOINT_TRIGGER/2))
 			{
 				stopIncoming(); //note here that the checkpointing is being done on a thread which has not been allocated a Xid yet.
-
+				log.debug("checkpointing....");
 			}//else check if already some process is trying to stop incoming
 			if(activeTxns.contains(xidCounter)){
 				// HOW TO HANDLE THIS ?
@@ -297,13 +301,14 @@ implements ResourceManager {
 		synchronized(HashSetEmpty)
 		{
 			activeTxns.put(temp,DUMMY);
+			log.debug("tid assigned is "+temp);
 			HashSetEmpty=HashSetEmpty.valueOf(false);
 		}
 
 		//<----------UNDOING--------------------->
 		UndoIMTable.put(temp,new Stack<UndoIMLog>() );
 		//</----------UNDOING--------------------->
-
+		log.debug("started succesfully");
 		return (temp);
 	}
 
