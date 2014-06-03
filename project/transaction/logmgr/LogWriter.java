@@ -1,4 +1,4 @@
-package project.logmgr;
+package project.transaction.logmgr;
 
 import java.io.FileWriter;
 import java.io.IOException;

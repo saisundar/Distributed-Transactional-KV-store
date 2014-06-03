@@ -1,11 +1,11 @@
 package project.transaction;
 
 import project.lockmgr.*;
-import project.recovery.LoadFiles;
-import project.recovery.RecoveryManager;
-import project.logmgr.LogWriter;
-import project.logmgr.TransactionLogger;
-import project.logmgr.VariableLogger;
+import project.transaction.recovery.LoadFiles;
+import project.transaction.recovery.RecoveryManager;
+import project.transaction.logmgr.LogWriter;
+import project.transaction.logmgr.TransactionLogger;
+import project.transaction.logmgr.VariableLogger;
 import project.transaction.bean.*;
 
 import java.io.FileNotFoundException;

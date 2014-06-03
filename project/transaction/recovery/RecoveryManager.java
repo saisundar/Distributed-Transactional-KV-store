@@ -1,11 +1,11 @@
-package project.recovery;
+package project.transaction.recovery;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import project.logmgr.LogReader;
+import project.transaction.logmgr.LogReader;
 import project.transaction.bean.Car;
 import project.transaction.bean.Flight;
 import project.transaction.bean.Hotels;
