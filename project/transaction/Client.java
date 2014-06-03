@@ -1,4 +1,4 @@
-package project.test.part1;
+package project.transaction;
 
 import java.rmi.*;
 import java.io.*;
@@ -78,8 +78,8 @@ public class Client {
 	    Runtime.getRuntime().exec(new String[]{
 		"sh",
 		"-c",
-		"java -classpath .. -DrmiRegPort=" + rmiPort +
-		" -Djava.security.policy=./security-policy transaction.ResourceManagerImpl >>" +
+		"java -classpath ../.. -DrmiRegPort=" + rmiPort +
+		" -Djava.security.policy=./security-policy project.transaction.ResourceManagerImpl >>" +
 		LOGDIR + toLaunch + LOGSUFFIX + " 2>&1"});
 	} catch (IOException e) {
 	    System.err.println("Cannot launch " + toLaunch + ": " + e);

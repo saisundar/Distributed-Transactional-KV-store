@@ -34,7 +34,7 @@ extends java.rmi.server.UnicastRemoteObject
 implements ResourceManager {
 
 	//Book keeping and other variables
-	private static Logger log = Logger.getLogger(ResourceManagerImpl.class);
+	//private static Logger log = Logger.getLogger(ResourceManagerImpl.class);
 	private ConcurrentHashMap<Integer,Object> activeTxns;
 	private LockManager lockManager;
 	private static volatile AtomicInteger shuttingDown = new AtomicInteger();
@@ -119,7 +119,7 @@ implements ResourceManager {
 	//i) Add volatile to some variables
 
 	public ResourceManagerImpl() throws RemoteException {
-		log.debug("starting constructor");
+		System.out.println("starting constructor");
 		lockManager = new LockManager();
 		activeTxns = new ConcurrentHashMap<Integer,Object>();
 		flightTable = new ConcurrentHashMap<String, Flight>();
@@ -144,7 +144,7 @@ implements ResourceManager {
 		callables.add(new TableWriter((Object)hotelTable,"hotelTable"));
 		callables.add(new TableWriter((Object)reservationTable,"reservationTable"));
 		callables.add(new TableWriter((Object)reservedflights,"flights"));
-		log.debug("closing conbstructor");
+		System.out.println("closing conbstructor");
 	}
 
 
@@ -267,13 +267,13 @@ implements ResourceManager {
 		int temp;
 		synchronized(enteredTxnsCount)
 		{
-			log.debug("entering start");
+			System.out.println("entering start");
 			synchronized(stopAndWait)
 			{
 				while(stopAndWait)
 				{
 					try{
-						log.debug("waiting on stopAndWait");
+						System.out.println("waiting on stopAndWait");
 						stopAndWait.wait();
 					}
 					catch(InterruptedException e)
@@ -288,7 +288,7 @@ implements ResourceManager {
 			if(enteredTxnsCount>=CHECKPOINT_TRIGGER && committedTrxns.get() >= (CHECKPOINT_TRIGGER/2))
 			{
 				stopIncoming(); //note here that the checkpointing is being done on a thread which has not been allocated a Xid yet.
-				log.debug("checkpointing....");
+				System.out.println("checkpointing....");
 			}//else check if already some process is trying to stop incoming
 			if(activeTxns.contains(xidCounter)){
 				// HOW TO HANDLE THIS ?
@@ -301,14 +301,14 @@ implements ResourceManager {
 		synchronized(HashSetEmpty)
 		{
 			activeTxns.put(temp,DUMMY);
-			log.debug("tid assigned is "+temp);
+			System.out.println("tid assigned is "+temp);
 			HashSetEmpty=HashSetEmpty.valueOf(false);
 		}
 
 		//<----------UNDOING--------------------->
 		UndoIMTable.put(temp,new Stack<UndoIMLog>() );
 		//</----------UNDOING--------------------->
-		log.debug("started succesfully");
+		System.out.println("started succesfully");
 		return (temp);
 	}
 
