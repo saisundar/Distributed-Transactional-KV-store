@@ -40,3 +40,17 @@ Query of flight/rooms/cars/customer does not return correct result after an abor
 
 ============================================
 Your final score is 0/100
+For each test your code failed, we have listed the points deducted and the most likely reason:
+
+(Bstcmt)	-100
+Cannot commit a non-op transaction.
+
+============================================
+Your final score is 0/100
+For each test your code failed, we have listed the points deducted and the most likely reason:
+
+(Bstcmt)	-100
+Cannot commit a non-op transaction.
+
+============================================
+Your final score is 0/100

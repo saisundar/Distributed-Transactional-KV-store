@@ -152,7 +152,7 @@ implements ResourceManager {
 			throws InvalidTransactionException
 			{
 
-		if(!activeTxns.contains(xidCounter)){
+		if(!activeTxns.contains(xid)){
 			throw new InvalidTransactionException(xid,"");
 		}
 
@@ -336,7 +336,6 @@ implements ResourceManager {
 		// When xid is removed from the hashset , see if the hashset becomes equal to the shuttingDown.get() value -
 		// implies there are no more useful processes left. hence can shutdown the system.
 
-		removeXID(xid);
 		Future returnVal = executor.submit(new TransactionLogger(xid+" " + "COMMIT\n"));
 		try
 		{
@@ -347,6 +346,8 @@ implements ResourceManager {
 			System.out.println("Something hapened while retrieving value of atomic integer retunVal.Lets all zink about zees now"+e.getMessage());
 		}
 		LogWriter.flush();
+		removeXID(xid);
+
 		return true;
 	}
 
@@ -479,7 +480,6 @@ implements ResourceManager {
 			undo.pop();
 		}
 		//</----------UNDOING--------------------->
-		removeXID(xid);
 		Future returnVal = executor.submit(new TransactionLogger(xid+" " + "ABORT\n"));
 		try
 		{
@@ -490,6 +490,7 @@ implements ResourceManager {
 			System.out.println("Something hapened while retrieving value of atomic integer retunVal.Lets all zink about zees now"+e.getMessage());
 		}
 		LogWriter.flush();
+		removeXID(xid);
 		return;
 	}
 	
