@@ -1,11 +1,9 @@
-package project.transaction;
+package transaction;
 
 import java.rmi.*;
 import java.io.*;
 import java.util.*;
 import java.lang.reflect.*;
-
-import project.transaction.ResourceManager;
 
 /**
  * exit(0): test passed
@@ -78,8 +76,8 @@ public class Client {
 	    Runtime.getRuntime().exec(new String[]{
 		"sh",
 		"-c",
-		"java -classpath ../.. -DrmiRegPort=" + rmiPort +
-		" -Djava.security.policy=./security-policy project.transaction.ResourceManagerImpl >>" +
+		"java -classpath .. -DrmiRegPort=" + rmiPort +
+		" -Djava.security.policy=./security-policy transaction.ResourceManagerImpl >>" +
 		LOGDIR + toLaunch + LOGSUFFIX + " 2>&1"});
 	} catch (IOException e) {
 	    System.err.println("Cannot launch " + toLaunch + ": " + e);

@@ -1,7 +1,7 @@
-package project.transaction.recovery;
+package transaction.recovery;
 
 import java.util.concurrent.ConcurrentHashMap;
-import project.transaction.bean.Flight;
+import transaction.bean.Flight;
 
 public class RedoFlight {
 

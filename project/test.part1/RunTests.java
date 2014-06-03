@@ -163,9 +163,9 @@ public class RunTests {
 		proc = Runtime.getRuntime().exec(new String[]{
 		    "sh",
 		    "-c",
-		    "java -classpath ../.. -DrmiPort=" +
+		    "java -classpath .. -DrmiPort=" +
 		    System.getProperty("rmiPort") +
-		    " -Djava.security.policy=./security-policy project.transaction.Client <" +
+		    " -Djava.security.policy=./security-policy transaction.Client <" +
 		    SCRIPTDIR + id +
 		    " >" + LOGDIR + id + OUTSUFFIX +
 		    " 2>" + LOGDIR + id + ERRSUFFIX});

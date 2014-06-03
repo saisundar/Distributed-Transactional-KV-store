@@ -1,5 +1,5 @@
 RMIREGPORT = 2100
-PROJECTROOT = ./*:../..
+PROJECTROOT = ./*:..
 
 all : server client
 

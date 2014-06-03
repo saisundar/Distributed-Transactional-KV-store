@@ -1,8 +1,8 @@
-package project.transaction.recovery;
+package transaction.recovery;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import project.transaction.bean.Car;
+import transaction.bean.Car;
 
 
 public class RedoCar {

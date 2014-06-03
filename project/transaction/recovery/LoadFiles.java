@@ -1,4 +1,4 @@
-package project.transaction.recovery;
+package transaction.recovery;
 
 import java.util.HashSet;
 import java.util.List;
@@ -10,11 +10,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import project.transaction.bean.Car;
-import project.transaction.bean.Flight;
-import project.transaction.bean.Hotels;
-import project.transaction.bean.Reservation;
-import project.transaction.bean.TableReader;
+import transaction.bean.Car;
+import transaction.bean.Flight;
+import transaction.bean.Hotels;
+import transaction.bean.Reservation;
+import transaction.bean.TableReader;
 
 public class LoadFiles {
 

@@ -1,4 +1,4 @@
-package project.transaction.bean;
+package transaction.bean;
 
 public class Flight {
 private String flightNum;

@@ -1,15 +1,15 @@
-package project.transaction.recovery;
+package transaction.recovery;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import project.transaction.logmgr.LogReader;
-import project.transaction.bean.Car;
-import project.transaction.bean.Flight;
-import project.transaction.bean.Hotels;
-import project.transaction.bean.Reservation;
+import transaction.logmgr.LogReader;
+import transaction.bean.Car;
+import transaction.bean.Flight;
+import transaction.bean.Hotels;
+import transaction.bean.Reservation;
 
 public class RecoveryManager {
 	RedoCar redoCar;

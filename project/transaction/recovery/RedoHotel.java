@@ -1,8 +1,8 @@
-package project.transaction.recovery;
+package transaction.recovery;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import project.transaction.bean.Hotels;
+import transaction.bean.Hotels;
 
 public class RedoHotel {
 	private ConcurrentHashMap<String, Hotels> table;

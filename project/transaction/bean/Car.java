@@ -1,4 +1,4 @@
-package project.transaction.bean;
+package transaction.bean;
 
 import java.io.Serializable;
 

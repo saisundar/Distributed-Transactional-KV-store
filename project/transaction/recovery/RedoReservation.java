@@ -1,11 +1,11 @@
-package project.transaction.recovery;
+package transaction.recovery;
 
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import project.transaction.bean.Flight;
-import project.transaction.bean.Reservation;
-import project.transaction.bean.UndoIMLog;
+import transaction.bean.Flight;
+import transaction.bean.Reservation;
+import transaction.bean.UndoIMLog;
 
 public class RedoReservation {
 	

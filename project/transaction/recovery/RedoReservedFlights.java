@@ -1,4 +1,4 @@
-package project.transaction.recovery;
+package transaction.recovery;
 
 import java.util.concurrent.ConcurrentHashMap;
 

@@ -1,4 +1,4 @@
-package project.transaction.logmgr;
+package transaction.logmgr;
 
 public class VariableLogger implements Runnable {
 	

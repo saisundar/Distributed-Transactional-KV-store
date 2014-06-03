@@ -1,4 +1,4 @@
-package project.transaction.logmgr;
+package transaction.logmgr;
 
 import java.util.concurrent.Callable;
 

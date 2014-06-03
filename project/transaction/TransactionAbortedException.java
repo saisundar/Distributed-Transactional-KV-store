@@ -1,4 +1,4 @@
-package project.transaction;
+package transaction;
 
 import java.rmi.*;
 
