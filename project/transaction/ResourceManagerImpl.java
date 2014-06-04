@@ -271,7 +271,7 @@ implements ResourceManager {
 		int temp;
 		synchronized(enteredTxnsCount)
 		{
-			System.out.println("entering start");
+			System.out.println("entering start==========");
 			synchronized(stopAndWait)
 			{
 				while(stopAndWait)
@@ -361,7 +361,7 @@ implements ResourceManager {
 		}
 		LogWriter.flush();
 		removeXID(xid);
-		System.out.println("Done commiting");
+		System.out.println("Done commiting=======");
 		return true;
 	}
 
@@ -509,6 +509,7 @@ implements ResourceManager {
 			System.out.println("Something hapened while retrieving value of atomic integer retunVal.Lets all zink about zees now"+e.getMessage());
 		}
 		LogWriter.flush();
+		System.out.println(" Aborted=======");
 		removeXID(xid);
 		return;
 	}

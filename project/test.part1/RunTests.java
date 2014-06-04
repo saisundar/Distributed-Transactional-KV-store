@@ -158,6 +158,7 @@ public class RunTests {
 	    }
 
 	    System.out.println("Launching test " + id);
+	    System.out.println("**************************************");
 	    Process proc = null;
 	    try {
 		proc = Runtime.getRuntime().exec(new String[]{
@@ -184,9 +185,11 @@ public class RunTests {
 	    int exitVal = proc.exitValue();
 	    if (exitVal == 0) {
 		System.out.println("Test " + id +" passed.");
+	        System.out.println("**************************************");
 		nextTest = null;
 	    } else if (exitVal == 2) {
 		System.out.println("Test " + id +" failed.");
+		System.out.println("**************************************");
 		grades.println("(" + id + ")\t-" + fPoints);
 		grades.println(fmsg + "\n");
 		score -= fPoints;
