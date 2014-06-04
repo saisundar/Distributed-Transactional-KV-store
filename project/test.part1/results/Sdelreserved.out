@@ -52,5 +52,7 @@ Bound to RM
 [1] 	LINE--1 return
 [1] 	LINE--1 call queryFlight xid "347"
 [1] Calling queryFlight
-[1] queryFlight returned: 100
+[1] queryFlight returned: 99
 [1] 	LINE--1 return 99
+[1] 	LINE--1 exit
+[1] Test exiting.

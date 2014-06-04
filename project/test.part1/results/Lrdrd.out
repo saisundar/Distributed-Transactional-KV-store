@@ -20,9 +20,9 @@ Bound to RM
 [1] Calling start
 [1] start returned: 2
 [1] xid set to 2
-[1] 	LINE--1 return
 [2] 	LINE--2 call start
 [2] Calling start
+[1] 	LINE--1 return
 [2] start returned: 3
 [2] xid set to 3
 [2] 	LINE--2 return

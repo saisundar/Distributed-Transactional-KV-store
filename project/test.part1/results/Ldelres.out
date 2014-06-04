@@ -46,13 +46,13 @@ Bound to RM
 [2] Calling start
 [2] start returned: 4
 [2] xid set to 4
-[2] 	LINE--2 return
 [1] 	LINE--1 call deleteFlight xid "347"
 [1] Calling deleteFlight
+[2] 	LINE--2 return
 [1] deleteFlight returned: false
-[1] 	LINE--1 return false
 [2] 	LINE--2 call reserveRoom xid "John" "Stanford"
 [2] Calling reserveRoom
+[1] 	LINE--1 return false
 [2] reserveRoom returned: true
 [2] 	LINE--2 return true
 [2] 	LINE--2 exit

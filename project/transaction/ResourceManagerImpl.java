@@ -1108,7 +1108,7 @@ implements ResourceManager {
 			return 0;
 		}
 		Flight flight = flightTable.get(flightNum);
-		return flight.getNumSeats();
+		return flight.getNumAvail();
 	}
 
 	public int queryFlightPrice(int xid, String flightNum)
@@ -1465,8 +1465,9 @@ implements ResourceManager {
 		}
 
 		//Decrement number of available seats
+		System.out.println("number of seats before"+data.getNumAvail());
 		data.setNumAvail(avail - 1);
-
+		System.out.println("number of seats after booking"+data.getNumAvail());
 		//</----------UNDOING--------------------->
 		undo.push(logRec);
 		//</----------UNDOING--------------------->

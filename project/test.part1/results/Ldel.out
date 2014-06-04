@@ -1,8 +1,8 @@
 RM launched
 Bound to RM
 [M] Launching 2 threads.
-[1] Thread running.
 [2] Thread running.
+[1] Thread running.
 [1] 	LINE--1 call start
 [1] Calling start
 [1] start returned: 1
@@ -34,8 +34,8 @@ Bound to RM
 [2] Calling queryCars
 [1] 	LINE--1 call commit xid
 [1] Calling commit
-[2] queryCars returned: 295
 [1] commit returned: true
+[2] queryCars returned: 295
 [1] 	LINE--1 return true
 [2] 	LINE--2 return 295
 [2] 	LINE--2 exit

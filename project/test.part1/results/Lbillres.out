@@ -1,9 +1,9 @@
 RM launched
 Bound to RM
 [M] Launching 2 threads.
-[2] Thread running.
 [1] Thread running.
 [1] 	LINE--1 call start
+[2] Thread running.
 [1] Calling start
 [1] start returned: 1
 [1] xid set to 1
@@ -46,9 +46,9 @@ Bound to RM
 [2] Calling start
 [2] start returned: 4
 [2] xid set to 4
-[2] 	LINE--2 return
 [1] 	LINE--1 call queryCustomerBill xid "John"
 [1] Calling queryCustomerBill
+[2] 	LINE--2 return
 [1] queryCustomerBill returned: 150
 [1] 	LINE--1 return 150
 [2] 	LINE--2 call reserveCar xid "John" "SFO"

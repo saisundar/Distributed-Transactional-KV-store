@@ -1,8 +1,8 @@
 RM launched
 Bound to RM
 [M] Launching 2 threads.
-[1] Thread running.
 [2] Thread running.
+[1] Thread running.
 [1] 	LINE--1 call start
 [1] Calling start
 [1] start returned: 1
@@ -30,8 +30,8 @@ Bound to RM
 [2] start returned: 3
 [2] xid set to 3
 [1] 	LINE--1 call reserveFlight xid "John" "347" 
-[1] Calling reserveFlight
 [2] 	LINE--2 return
+[1] Calling reserveFlight
 [1] reserveFlight returned: true
 [1] 	LINE--1 return true
 [2] 	LINE--2 call addFlight xid "347" 100 620 

@@ -1,8 +1,8 @@
 RM launched
 Bound to RM
 [M] Launching 2 threads.
-[2] Thread running.
 [1] Thread running.
+[2] Thread running.
 [1] 	LINE--1 call start
 [1] Calling start
 [1] start returned: 1
@@ -46,14 +46,14 @@ Bound to RM
 [1] 	LINE--1 call queryCustomerBill xid "John"
 [1] Calling queryCustomerBill
 [1] queryCustomerBill returned: 310
-[1] 	LINE--1 return 310
 [2] 	LINE--2 call addFlight xid "347" 100 620 
 [2] Calling addFlight
+[1] 	LINE--1 return 310
 [1] 	LINE--1 call commit xid
 [1] Calling commit
+[2] addFlight returned: true
 [1] commit returned: true
 [1] 	LINE--1 return true
-[2] addFlight returned: true
 [2] 	LINE--2 return true
 [2] 	LINE--2 exit
 [2] Test exiting.

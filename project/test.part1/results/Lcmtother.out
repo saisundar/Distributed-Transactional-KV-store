@@ -45,9 +45,9 @@ Bound to RM
 [1] 	LINE--1 call commit xid
 [1] Calling commit
 [1] commit returned: true
-[1] 	LINE--1 return true
 [2] 	LINE--2 call abort xid
 [2] Calling abort
+[1] 	LINE--1 return true
 [2] abort returned: null
 [2] 	LINE--2 return
 [1] 	LINE--1 call start

@@ -1,15 +1,15 @@
 RM launched
 Bound to RM
 [M] Launching 2 threads.
+[2] Thread running.
 [1] Thread running.
 [1] 	LINE--1 call start
-[2] Thread running.
 [1] Calling start
 [1] start returned: 1
 [1] xid set to 1
-[1] 	LINE--1 return
 [2] 	LINE--2 call start
 [2] Calling start
+[1] 	LINE--1 return
 [2] start returned: 2
 [2] xid set to 2
 [2] 	LINE--2 return
@@ -24,9 +24,9 @@ Bound to RM
 [1] 	LINE--1 call addCars xid "SFO" 300 30 
 [1] Calling addCars
 [1] addCars returned: true
-[1] 	LINE--1 return true 
 [2] 	LINE--2 call commit xid
 [2] Calling commit
+[1] 	LINE--1 return true 
 [2] commit returned: true
 [2] 	LINE--2 return true
 [1] 	LINE--1 call commit xid

@@ -43,11 +43,11 @@ Bound to RM
 [2] queryRoomsPrice exceptioned: transaction.TransactionAbortedException
 [1] 	LINE--1 call commit xid
 [1] Calling commit
-[2] 	LINE--2 except transaction.TransactionAbortedException
 [1] commit returned: true
 [1] 	LINE--1 return true
 [1] 	LINE--1 call start
 [1] Calling start
+[2] 	LINE--2 except transaction.TransactionAbortedException
 [1] start returned: 4
 [1] xid set to 4
 [1] 	LINE--1 return
