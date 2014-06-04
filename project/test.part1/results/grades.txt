@@ -1,7 +1,7 @@
 For each test your code failed, we have listed the points deducted and the most likely reason:
 
-(Baddcmtrd)	-100
-Query of flight/rooms/cars/customer does not return correct result.
+(Baddabtrd)	-100
+Query of flight/rooms/cars/customer does not return correct result after an abort.
 
 ============================================
 Your final score is 0/100

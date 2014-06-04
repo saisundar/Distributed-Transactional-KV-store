@@ -151,9 +151,9 @@ implements ResourceManager {
 	public void isValidTrxn(int xid)
 			throws InvalidTransactionException
 			{
-		System.out.println("No of active transactions: " + activeTxns.size());
-		System.out.println(xid + ": " + activeTxns.get(xid));
-		System.out.println(activeTxns.contains(xid));
+		//System.out.println("No of active transactions: " + activeTxns.size());
+		//System.out.println(xid + ": " + activeTxns.get(xid));
+		//System.out.println(activeTxns.containsKey(xid));
 		if(activeTxns.get(xid) == null){
 			System.out.println("Throwing the Invalid Txn Exception");
 			throw new InvalidTransactionException(xid,"");
@@ -294,7 +294,7 @@ implements ResourceManager {
 				stopIncoming(); //note here that the checkpointing is being done on a thread which has not been allocated a Xid yet.
 				System.out.println("checkpointing....");
 			}//else check if already some process is trying to stop incoming
-			if(activeTxns.contains(xidCounter)){
+			if(activeTxns.containsKey(xidCounter)){
 				// HOW TO HANDLE THIS ?
 				System.out.println("SHOULD NOT REACH: XID DUPLICATE");
 			}
@@ -586,7 +586,7 @@ implements ResourceManager {
 			throws RemoteException, 
 			TransactionAbortedException,
 			InvalidTransactionException {
-		if(reservedflights.contains(flightNum) && reservedflights.get(flightNum)!=0){
+		if(reservedflights.containsKey(flightNum) && reservedflights.get(flightNum)!=0){
 			return false;
 		}
 
@@ -606,7 +606,7 @@ implements ResourceManager {
 			e.printStackTrace();
 			throw new TransactionAbortedException(xid, "Aborted transaction because deadlock detected for XID: "+xid);
 		}
-		if(!flightTable.contains(flightNum)){
+		if(!flightTable.containsKey(flightNum)){
 			return false;
 		}
 
@@ -927,7 +927,7 @@ implements ResourceManager {
 
 			//Check if customer already exists
 			//ASK KEWAL TO CHANGE THIS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-			if(!reservationTable.contains(custName)){
+			if(!reservationTable.containsKey(custName)){
 				reservationTable.put(custName, new HashSet<Reservation>());
 
 				//<----------UNDOING--------------------->
@@ -967,7 +967,7 @@ implements ResourceManager {
 			}
 
 			//Check if customer exists
-			if(!reservationTable.contains(custName)){
+			if(!reservationTable.containsKey(custName)){
 				return false;
 			}
 
@@ -1098,7 +1098,7 @@ implements ResourceManager {
 			abort(xid);
 			throw new TransactionAbortedException(xid, "Aborted transaction because deadlock detected for XID: "+xid);
 		}
-		if(!flightTable.contains(flightNum)){
+		if(!flightTable.containsKey(flightNum)){
 			return 0;
 		}
 		Flight flight = flightTable.get(flightNum);
@@ -1127,7 +1127,7 @@ implements ResourceManager {
 			abort(xid);
 			throw new TransactionAbortedException(xid, "Aborted transaction because deadlock detected for XID: "+xid);
 		}
-		if(!flightTable.contains(flightNum)){
+		if(!flightTable.containsKey(flightNum)){
 			return 0;
 		}
 		Flight flight = flightTable.get(flightNum);
@@ -1313,7 +1313,7 @@ implements ResourceManager {
 			}
 
 			//Check if customer exists
-			if(!reservationTable.contains(custName)){
+			if(!reservationTable.containsKey(custName)){
 				return 0;
 			}
 			//Over Here Customer exists
@@ -1390,7 +1390,7 @@ implements ResourceManager {
 			abort(xid);
 			throw new TransactionAbortedException(xid, "Aborted transaction because deadlock detected for XID: "+xid);
 		}
-		if(!flightTable.contains(flightNum)){
+		if(!flightTable.containsKey(flightNum)){
 			return false;
 		}
 		Flight data = flightTable.get(flightNum);
