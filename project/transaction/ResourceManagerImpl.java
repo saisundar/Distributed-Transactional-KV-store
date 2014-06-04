@@ -374,7 +374,11 @@ implements ResourceManager {
 		case FlightTable:
 			if(entry.operation==insert)
 			{
+				System.out.println("insert in flight..undoing...");
+				System.out.println(entry.Key);
+				System.out.println("size of flighttable before undo"+flightTable.size());
 				flightTable.remove(entry.Key);
+				System.out.println("size of flighttable after undo"+flightTable.size());
 			}
 			else if(entry.operation == overWrite)
 			{
@@ -458,6 +462,7 @@ implements ResourceManager {
 			break;
 		default:
 			System.out.println("should not freaking happen......");
+			System.out.println(entry.tableName);
 			break;
 		}
 	}

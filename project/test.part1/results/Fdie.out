@@ -1,0 +1,10 @@
+RM launched
+Bound to RM
+[M] Launching 1 threads.
+[1] Thread running.
+[1] 	LINE--1 call dieNow
+[1] Calling dieNow
+[1] dieNow exceptioned: java.rmi.UnmarshalException
+[1] 	LINE--1 except java.rmi.RemoteException 
+[1] 	LINE--1 exit
+[1] Test exiting.

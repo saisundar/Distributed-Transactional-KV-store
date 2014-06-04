@@ -1,0 +1,56 @@
+RM launched
+Bound to RM
+[M] Launching 1 threads.
+[1] Thread running.
+[1] 	LINE--1 call start
+[1] Calling start
+[1] start returned: 1
+[1] xid set to 1
+[1] 	LINE--1 return
+[1] 	LINE--1 call addFlight xid "347" 100 310
+[1] Calling addFlight
+[1] addFlight returned: true
+[1] 	LINE--1 return true
+[1] 	LINE--1 call newCustomer xid "John"
+[1] Calling newCustomer
+[1] newCustomer returned: true
+[1] 	LINE--1 return true
+[1] 	LINE--1 call commit xid
+[1] Calling commit
+[1] commit returned: true
+[1] 	LINE--1 return true
+[1] 	LINE--1 call start
+[1] Calling start
+[1] start returned: 2
+[1] xid set to 2
+[1] 	LINE--1 return
+[1] 	LINE--1 call reserveFlight xid "John" "347"
+[1] Calling reserveFlight
+[1] reserveFlight returned: true
+[1] 	LINE--1 return true
+[1] 	LINE--1 call commit xid
+[1] Calling commit
+[1] commit returned: true
+[1] 	LINE--1 return true
+[1] 	LINE--1 call start
+[1] Calling start
+[1] start returned: 3
+[1] xid set to 3
+[1] 	LINE--1 return
+[1] 	LINE--1 call deleteFlight xid "347"
+[1] Calling deleteFlight
+[1] deleteFlight returned: false
+[1] 	LINE--1 return false
+[1] 	LINE--1 call commit xid
+[1] Calling commit
+[1] commit returned: true
+[1] 	LINE--1 return true
+[1] 	LINE--1 call start
+[1] Calling start
+[1] start returned: 4
+[1] xid set to 4
+[1] 	LINE--1 return
+[1] 	LINE--1 call queryFlight xid "347"
+[1] Calling queryFlight
+[1] queryFlight returned: 100
+[1] 	LINE--1 return 99

@@ -1,5 +1,5 @@
 #!/bin/tcsh
-
+ps -ef| grep 'rmiregistry'|grep -v 'grep'|awk '{print $2}'|xargs kill -9
 make clean
 rm -f ../test.part1/results/*
 make server

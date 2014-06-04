@@ -10,7 +10,7 @@ public class UndoIMLog {
 	public String Key		= null;
 	public Reservation AuxKey = null;
 	
-	public UndoIMLog(int tablName, int operation, Object objPointer,
+	public UndoIMLog(int tableName, int operation, Object objPointer,
 			String key, Reservation auxKey) {
 		this.tableName = tableName;
 		this.operation = operation;

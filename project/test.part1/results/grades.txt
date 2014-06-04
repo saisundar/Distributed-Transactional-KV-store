@@ -1,7 +1,16 @@
 For each test your code failed, we have listed the points deducted and the most likely reason:
 
-(Baddabtrd)	-100
-Query of flight/rooms/cars/customer does not return correct result after an abort.
+(Sdelreserved)	-3
+Allows delete of flight with reservations.
+
+(Faddcmtdierd)	-15
+After failure, previous committed transactions are lost.
+
+(Fdieb4cmt)	-10
+After dieBeforePointerSwitch is set, server does not die during commit.
+
+(Fdieaftcmt)	-10
+After dieAfterPointerSwitch is set, server does not die during commit.
 
 ============================================
-Your final score is 0/100
+Your final score is 62/100
