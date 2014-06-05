@@ -1,5 +1,6 @@
 package transaction.recovery;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;
@@ -19,6 +20,7 @@ public class RecoveryManager {
 	RedoReservedFlights redoReservedFlights;
 	private HashSet<Integer> comtdTxns;
 	LogReader logReader;
+	private static boolean recoveryDone = false;
 
 	public RecoveryManager(ConcurrentHashMap<String, Flight> flightTable, ConcurrentHashMap<String, Car> carTable, ConcurrentHashMap<String, Hotels> hotelTable, ConcurrentHashMap<String, HashSet<Reservation>> reservationTable, ConcurrentHashMap<String,Integer> reservedflights){
 		redoCar = new RedoCar(carTable);
@@ -48,7 +50,8 @@ public class RecoveryManager {
 			nextLine = logReader.nextLine();
 		}
 
-		if(comtdTxns.size()==0)return false; 
+		if(comtdTxns.size()==0)return false;
+		logReader.close();
 		return true;
 	}
 
@@ -174,10 +177,18 @@ public class RecoveryManager {
 			// Read Next line
 			nextLine = logReader.nextLine();
 		}
+		logReader.close();
+		recoveryDone = true;
 		return true;
 	}
 
-	public boolean cleanup(){
+	public boolean cleanup() throws FileNotFoundException, SecurityException{
+		if(recoveryDone == true){
+			File f = new File("/undo-redo.log"); 
+			if(f.exists()){
+				f.delete();
+			}
+		}
 		return true;
 	}
 }

@@ -1,6 +1,7 @@
 package transaction.bean;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.concurrent.Callable;
 
@@ -14,20 +15,13 @@ public class TableReader implements Callable<Integer>{
 		this.fileName = fileName;
 	}
 
-	public Integer call() throws Exception{
-		try
-		{
+	public Integer call() throws FileNotFoundException{
+	
 			InputStream fileIn = new FileInputStream(fileName);
 			FSTObjectInput in = new FSTObjectInput(fileIn);
 			table =   in.readObject();
 			in.close(); // required !
 			fileIn.close();
-		}
-		catch(Exception e)
-		{
-			System.out.println(" exception message"+e.getMessage());
-			return 1;
-		}
 
 		return 0;
 	}

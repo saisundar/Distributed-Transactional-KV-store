@@ -40,7 +40,7 @@ implements ResourceManager {
 	private static volatile AtomicInteger shuttingDown = new AtomicInteger();
 	private volatile AtomicInteger committedTrxns = new  AtomicInteger();
 	private volatile Integer enteredTxnsCount=0;
-	private static Boolean stopAndWait = new Boolean(false);
+	private static Boolean stopAndWait = new Boolean(true);
 	private static Boolean HashSetEmpty = new Boolean(true);
 	private ExecutorService checkPointers ;
 	private Set<Callable<Integer>> callables;
@@ -145,6 +145,27 @@ implements ResourceManager {
 		callables.add(new TableWriter((Object)reservationTable,"reservationTable"));
 		callables.add(new TableWriter((Object)reservedflights,"flights"));
 		System.out.println("closing conbstructor");
+
+		try{
+			loadFiles();
+		}
+		catch(FileNotFoundException e){
+			System.out.println("Cannot find file/s: " + e.getMessage());
+		}
+		
+		
+		try{
+			recover();
+		}
+		catch(FileNotFoundException e){
+			System.out.println("Failed in recover: "+ e.getMessage());
+		}
+		
+		
+		synchronized (shuttingDown) {
+			stopAndWait = Boolean.valueOf(false);
+			stopAndWait.notifyAll();
+		}
 	}
 
 
@@ -479,7 +500,7 @@ implements ResourceManager {
 		UndoIMLog entry = null;
 		while(!undo.empty() && retries>0)
 		{
-			
+
 			try
 			{
 				entry = undo.peek();
@@ -513,7 +534,7 @@ implements ResourceManager {
 		removeXID(xid);
 		return;
 	}
-	
+
 	// ADMINISTRATIVE INTERFACE
 	public boolean addFlight(int xid, String flightNum, int numSeats, int price) 
 			throws RemoteException, 
@@ -1685,11 +1706,26 @@ implements ResourceManager {
 		reservationTable = (ConcurrentHashMap<String, HashSet<Reservation>>) loadObject.getTR("reservationTable").getTable();;
 		reservedflights = (ConcurrentHashMap<String,Integer>) loadObject.getTR("reservedflights").getTable();;
 	}
-	
+
 	public void recover() throws FileNotFoundException{
 		RecoveryManager recoveryManager = new RecoveryManager(flightTable,  carTable,  hotelTable, reservationTable,  reservedflights);
-		if(recoveryManager.analyze()==false)return;
-		if(recoveryManager.redo()==false)return;
+		if(recoveryManager.analyze()==false){
+			System.out.println("Failed during analyze");
+			return;
+		}
+		if(recoveryManager.redo()==false){
+			System.out.println("Failed during redo");
+			return;
+		}
+		try{
 		recoveryManager.cleanup();
+		}
+		catch(SecurityException e){
+			System.out.println("Security permission issues: "+e.getMessage());
+		}
+		catch(FileNotFoundException e){
+			System.out.println("PROBLEM WHILE DELETING LOGS");
+			throw new FileNotFoundException();
+		}
 	}
 }
