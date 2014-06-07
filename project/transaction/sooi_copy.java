@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.log4j.Logger;
 import java.nio.file.Files;
 import java.io.File;
 import java.nio.file.Path;
@@ -42,7 +43,7 @@ implements ResourceManager {
 	private static volatile AtomicInteger shuttingDown = new AtomicInteger();
 	private volatile AtomicInteger committedTrxns = new  AtomicInteger();
 	private volatile Integer enteredTxnsCount=0;
-	private static Boolean stopAndWait = new Boolean(false);
+	private static Boolean stopAndWait = new Boolean(true);
 	private static Boolean HashSetEmpty = new Boolean(true);
 	private ExecutorService checkPointers ;
 	private Set<Callable<Integer>> callables;
@@ -154,8 +155,9 @@ implements ResourceManager {
 		callables.add(new TableWriter((Object)carTable,"data/carTable"));
 		callables.add(new TableWriter((Object)hotelTable,"data/hotelTable"));
 		callables.add(new TableWriter((Object)reservationTable,"data/reservationTable"));
-		callables.add(new TableWriter((Object)reservedflights,"data/reservedFlights"));
-
+		callables.add(new TableWriter((Object)reservedflights,"data/flights"));
+		System.out.println("closing conbstructor");
+			
 		checkAndCreateData();
 		try{
 			loadFiles();
@@ -163,21 +165,20 @@ implements ResourceManager {
 		catch(FileNotFoundException e){
 			System.out.println("Cannot find file/s: " + e.getMessage());
 		}
-		System.out.println("Load files done/not done");		
+		
+		
 		try{
 			recover();
 		}
 		catch(FileNotFoundException e){
 			System.out.println("Failed in recover: "+ e.getMessage());
 		}
-		System.out.println("Recovery done");
 		
-		//TODO : why this?? synchronized (shuttingDown) {		
-		/*synchronized (stopAndWait) {
+		
+		synchronized (shuttingDown) {
 			stopAndWait = Boolean.valueOf(false);
 			stopAndWait.notifyAll();
-		}*/
-		System.out.println("closing conbstructor");
+		}
 	}
 
 
@@ -1716,24 +1717,20 @@ implements ResourceManager {
 		carTable = (ConcurrentHashMap<String, Car>) loadObject.getTR("carTable").getTable();
 		hotelTable = (ConcurrentHashMap<String, Hotels>) loadObject.getTR("hotelTable").getTable();;
 		reservationTable = (ConcurrentHashMap<String, HashSet<Reservation>>) loadObject.getTR("reservationTable").getTable();;
-		reservedflights = (ConcurrentHashMap<String,Integer>) loadObject.getTR("reservedFlights").getTable();;
+		reservedflights = (ConcurrentHashMap<String,Integer>) loadObject.getTR("reservedflights").getTable();;
 	}
 
 	public void recover() throws FileNotFoundException{
 		RecoveryManager recoveryManager = new RecoveryManager(flightTable,  carTable,  hotelTable, reservationTable,  reservedflights);
-		System.out.println("Recoveryt Manager instantiated");
 		if(recoveryManager.analyze()==false){
 			System.out.println("Failed during analyze");
 			return;
 		}
-		System.out.println("Analyze phase done");
 		if(recoveryManager.redo()==false){
 			System.out.println("Failed during redo");
 			return;
 		}
-		System.out.println("REDO phase done");
 		try{
-		System.out.println("Doing cleanup");
 		recoveryManager.cleanup();
 		}
 		catch(SecurityException e){
