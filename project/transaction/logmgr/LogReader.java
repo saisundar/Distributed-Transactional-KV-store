@@ -10,7 +10,7 @@ public class LogReader {
 	private BufferedReader fr;
 
 	public void loadFile() throws FileNotFoundException{
-		fr = new BufferedReader(new FileReader("undo-redo.log"));
+		fr = new BufferedReader(new FileReader("data/undo-redo.log"));
 		if(fr == null){
 			System.out.println("fr is null");
 		}

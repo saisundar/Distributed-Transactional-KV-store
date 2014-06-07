@@ -18,7 +18,7 @@ public class TableReader implements Callable<Integer>{
 
 	public Integer call(){
 	try{
-			InputStream fileIn = new FileInputStream(fileName);
+			InputStream fileIn = new FileInputStream("data/"+fileName);
 			ObjectInputStream in = new ObjectInputStream(fileIn);
 			System.out.println("Reading the object from " + fileName);
 			table =   in.readObject();
