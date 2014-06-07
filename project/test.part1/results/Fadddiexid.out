@@ -23,9 +23,14 @@ Bound to RM
 [1] Calling newCustomer
 [1] newCustomer returned: true
 [1] 	LINE--1 return true
-[1] 	LINE--1 call commit xid
-[1] Calling commit
-[1] commit returned: true
-[1] 	LINE--1 return true
-[1] 	LINE--1 exit
-[1] Test exiting.
+[1] 	LINE--1 call dieNow
+[1] Calling dieNow
+[1] dieNow exceptioned: java.rmi.UnmarshalException
+[1] 	LINE--1 except java.rmi.RemoteException 
+[1] 	LINE--1 launch
+RM launched
+Bound to RM
+[1] 	LINE--1 call queryFlight xid "347"
+[1] Calling queryFlight
+[1] queryFlight exceptioned: transaction.InvalidTransactionException
+[1] 	LINE--1 except transaction.TransactionAbortedException

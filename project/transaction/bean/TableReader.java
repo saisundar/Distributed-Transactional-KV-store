@@ -17,27 +17,35 @@ public class TableReader implements Callable<Integer>{
 	}
 
 	public Integer call(){
-	try{
-			InputStream fileIn = new FileInputStream("data/"+fileName);
-			ObjectInputStream in = new ObjectInputStream(fileIn);
+		InputStream fileIn = null;
+		ObjectInputStream in = null;
+		try{
+			fileIn = new FileInputStream("data/"+fileName);
+			in = new ObjectInputStream(fileIn);
 			System.out.println("Reading the object from " + fileName);
 			table =   in.readObject();
-			in.close(); // required !
-			fileIn.close();
 			System.out.println("Reading done in Callable from "+fileName);
-	}
-	catch(FileNotFoundException e){
+	}catch(FileNotFoundException e){
 		System.out.println("File not found to read");
 		return 2;
-	}
-	catch(IOException e)
-	{
+	}catch(IOException e){
 		System.out.println("I/O exceptiuon ... should not happen");
 		e.printStackTrace();
-	}
-	catch(ClassNotFoundException ex){
+	}catch(ClassNotFoundException ex){
 		System.out.println(ex.getMessage());
 		return 1;
+	}finally{
+		try{
+			if(in != null){
+				in.close(); //required !
+			}
+			if(fileIn != null){
+				fileIn.close();
+			}
+		}catch(IOException e){
+			System.out.println("Error in closing: "+e.getMessage());
+			return 1;
+		}
 	}
 	
 

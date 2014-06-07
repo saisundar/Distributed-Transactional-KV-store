@@ -27,10 +27,34 @@ Bound to RM
 [1] Calling commit
 [1] commit returned: true
 [1] 	LINE--1 return true
-[1] 	LINE--1 call start
+[1] 	LINE--1 call start 
 [1] Calling start
 [1] start returned: 2
 [1] xid set to 2
+[1] 	LINE--1 return 
+[1] 	LINE--1 call addFlight xid "347" 100 620 
+[1] Calling addFlight
+[1] addFlight returned: true
+[1] 	LINE--1 return true 
+[1] 	LINE--1 call addRooms xid "Stanford" 200 300 
+[1] Calling addRooms
+[1] addRooms returned: true
+[1] 	LINE--1 return true 
+[1] 	LINE--1 call addCars xid "SFO" 300 60 
+[1] Calling addCars
+[1] addCars returned: true
+[1] 	LINE--1 return true 
+[1] 	LINE--1 call dieNow
+[1] Calling dieNow
+[1] dieNow exceptioned: java.rmi.UnmarshalException
+[1] 	LINE--1 except java.rmi.RemoteException 
+[1] 	LINE--1 launch
+RM launched
+Bound to RM
+[1] 	LINE--1 call start
+[1] Calling start
+[1] start returned: 1
+[1] xid set to 1
 [1] 	LINE--1 return
 [1] 	LINE--1 call queryFlight xid "347"
 [1] Calling queryFlight

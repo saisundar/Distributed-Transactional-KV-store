@@ -1,0 +1,13 @@
+For each test your code failed, we have listed the points deducted and the most likely reason:
+
+(Fadddiexid)	-1
+Forcibly aborted transaction does not throw TransactionAbortedException.
+
+(Fdieb4cmt)	-10
+After dieBeforePointerSwitch is set, server does not die during commit.
+
+(Fdieaftcmt)	-10
+After dieAfterPointerSwitch is set, server does not die during commit.
+
+============================================
+Your final score is 79/100
