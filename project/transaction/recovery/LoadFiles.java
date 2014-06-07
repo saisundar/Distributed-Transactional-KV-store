@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import java.io.FileNotFoundException;
 import transaction.bean.Car;
 import transaction.bean.Flight;
 import transaction.bean.Hotels;
@@ -49,7 +50,7 @@ public class LoadFiles {
 		
 	}
 
-	public boolean load(int nTries){
+	public boolean load(int nTries) throws FileNotFoundException{
 
 		boolean result = true;
 		List<Future<Integer>> futures;

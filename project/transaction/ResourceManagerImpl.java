@@ -1692,7 +1692,7 @@ implements ResourceManager {
 
 	//RECOVERY/ STARTUP INTERFACE
 
-	public void loadFiles() throws RemoteException{
+	public void loadFiles() throws RemoteException,FileNotFoundException{
 		LoadFiles loadObject = new LoadFiles(checkPointers);
 		loadObject.loadSetup();
 		if(loadObject.load(0)==false){

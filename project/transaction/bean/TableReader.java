@@ -16,12 +16,17 @@ public class TableReader implements Callable<Integer>{
 	}
 
 	public Integer call() throws FileNotFoundException{
-	
+	try{
 			InputStream fileIn = new FileInputStream(fileName);
 			FSTObjectInput in = new FSTObjectInput(fileIn);
 			table =   in.readObject();
 			in.close(); // required !
 			fileIn.close();
+	}
+	catch(Exception e)
+	{
+
+	}
 
 		return 0;
 	}
