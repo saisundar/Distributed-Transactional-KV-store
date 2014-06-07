@@ -40,7 +40,7 @@ public class LoadFiles {
 		carTR = new TableReader("carTable");
 		hotelTR = new TableReader("hotelTable");
 		reservationTR = new TableReader("reservationTable");
-		reservedflightsTR = new TableReader("flights");
+		reservedflightsTR = new TableReader("reservedFlights");
 
 		callables.add(flightTR);
 		callables.add(carTR);
@@ -63,20 +63,24 @@ public class LoadFiles {
 		}
 		if(nTries==3)
 		{
-			System.out.println("Cannot load files");
+			System.out.println("Cannot load files :: 3 retries done");
 			return false;
 			// Kill system : Invoke dieNow in calling code
 		}
 
 		for(Future<Integer> future : futures){
 			try {
-				if(future.get() == 1)
+				if(future.get() == 1){
 					System.out.println("Load Attempt: "+nTries+" Failed");
+					result = false;
+				}else if(future.get() == 2){
+					throw new FileNotFoundException("file not found exception thrown again by load method");
+				}
 			} catch (InterruptedException | ExecutionException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			result = false;
+			
 		}
 		
 		if(result == false)
@@ -85,16 +89,18 @@ public class LoadFiles {
 	}
 	
 	public TableReader getTR(String fileName){
-		if(fileName == "flights")
+		if(fileName.equals("reservedFlights"))
 			return reservedflightsTR;
-		else if(fileName == "reservationTable")
+		else if(fileName.equals("reservationTable"))
 			return reservationTR;
-		else if(fileName == "flightTable")
+		else if(fileName.equals("flightTable"))
 			return flightTR;
-		else if(fileName == "carTable")
+		else if(fileName.equals("carTable"))
 			return carTR;
-		else if(fileName == "hotelTable")
+		else if(fileName.equals("hotelTable"))
 			return hotelTR;
+		else
+			System.out.println("Cannot find " + fileName);
 		
 		return null;
 	}

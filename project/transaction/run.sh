@@ -11,7 +11,7 @@ rmiregistry -J-classpath -J.. 2100 &
 cd ../test.part1
 #setenv CLASSPATH .:gnujaxp.jar
 /usr/bin/javac RunTests.java
-rm -fr Run.log
+rm -fr Run.log undo-redo.log
 #java -cp -DrmiPort=2100 RunTests MASTER.xml >> Run.log &
 java -DrmiPort=2100 RunTests MASTER.xml >> Run.log &
 while [ ! -f results/RM.log ]

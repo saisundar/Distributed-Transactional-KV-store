@@ -4,8 +4,9 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-
-import de.ruedigermoeller.serialization.FSTObjectOutput;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.lang.ClassNotFoundException;
 
 public class TableWriter implements Callable<Integer> {
 
@@ -21,12 +22,12 @@ public class TableWriter implements Callable<Integer> {
 		try
 		{
 			OutputStream fileOut = new FileOutputStream(fileName);
-			FSTObjectOutput out = new FSTObjectOutput(fileOut);
+			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(table);
 			out.close(); // required !
 			fileOut.close();
 		}
-		catch(Exception e)
+		catch(IOException e)
 		{
 			System.out.println(" exception message"+e.getMessage());
 			return 1;

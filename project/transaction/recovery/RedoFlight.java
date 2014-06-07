@@ -15,6 +15,7 @@ public class RedoFlight {
 	public void insert(String key) {
 		Flight value = new Flight(key,0,0,0);
 		table.put(key, value);
+		System.out.println("Inserted the new record " + table.get(key));
 	}
 
 	public void delete(String key) {
@@ -23,6 +24,7 @@ public class RedoFlight {
 
 	public void updatePrice(String key, int price) {
 		Flight value = table.get(key);
+		System.out.println("Updating the record's price in : " + value);
 		value.setPrice(price);
 	}
 

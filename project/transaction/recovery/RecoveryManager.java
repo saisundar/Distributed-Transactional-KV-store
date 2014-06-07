@@ -33,8 +33,9 @@ public class RecoveryManager {
 
 	public boolean analyze() throws FileNotFoundException{
 		// Load Undo Redo Logs
+		comtdTxns = new HashSet<Integer>();
 		logReader.loadFile();
-
+		System.out.println("Loaded undo-redo log file");
 		// Create HashSet of Committed Transactions
 		String nextLine = logReader.nextLine();
 		if(nextLine==null){
@@ -44,6 +45,7 @@ public class RecoveryManager {
 
 		while(nextLine != null){
 			if(nextLine.contains("COMMIT")){
+				System.out.println("I see a commit");
 				String[] xid = nextLine.split(" ");
 				comtdTxns.add(Integer.parseInt(xid[0]));
 			}
@@ -73,10 +75,11 @@ public class RecoveryManager {
 			}
 
 			// PERFORM REDO
-
+			System.out.println("LOG RECORD is : " + nextLine);
 			if(xid[1].equals("Flights")){
-				if(xid[3]==null){
+				if(xid[3].equals("")){
 					if(xid[4].equals("INSERT")){
+						
 						redoFlight.insert(xid[2]);
 					}
 					else if(xid[4].equals("DELETE")){
@@ -85,6 +88,7 @@ public class RecoveryManager {
 				}
 				else{
 					if(xid[3].equals("Price")){
+						System.out.println("Updating the Price");
 						redoFlight.updatePrice(xid[2],Integer.parseInt(xid[5]));
 					}
 					else if(xid[3].equals("NumAvail")){
@@ -99,7 +103,7 @@ public class RecoveryManager {
 
 			// REDO for Cars
 			else if(xid[1].equals("Cars")){
-				if(xid[3]==null){
+				if(xid[3].equals("")){
 					if(xid[4].equals("INSERT")){
 						redoCar.insert(xid[2]);
 					}
@@ -123,7 +127,7 @@ public class RecoveryManager {
 
 			// REDO for Hotels
 			else if(xid[1].equals("Rooms")){
-				if(xid[3]==null){
+				if(xid[3].equals("")){
 					if(xid[4].equals("INSERT")){
 						redoHotel.insert(xid[2]);
 					}
@@ -159,7 +163,7 @@ public class RecoveryManager {
 			}
 
 			else if(xid[1].equals("ReservedFlights")){
-				if(xid[3]==null){
+				if(xid[3].equals("")){
 					if(xid[4].equals("INSERT")){
 						redoReservedFlights.insert(xid[2]);
 					}
@@ -184,7 +188,7 @@ public class RecoveryManager {
 
 	public boolean cleanup() throws FileNotFoundException, SecurityException{
 		if(recoveryDone == true){
-			File f = new File("/undo-redo.log"); 
+			File f = new File("undo-redo.log"); 
 			if(f.exists()){
 				f.delete();
 			}
