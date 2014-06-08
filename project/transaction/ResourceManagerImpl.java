@@ -192,10 +192,7 @@ implements ResourceManager {
 		//System.out.println("No of active transactions: " + activeTxns.size());
 		//System.out.println(xid + ": " + activeTxns.get(xid));
 		System.out.println("Current XID: " + xid);
-		System.out.println("ABorted Transactions");
-		for(int s : abrtdTxns){
-			System.out.println(s);
-		}
+
 		if(abrtdTxns.contains(xid)){
 			throw new TransactionAbortedException(xid,"");
 		}
@@ -1786,6 +1783,12 @@ implements ResourceManager {
 			return;
 		}
 		abrtdTxns = recoveryManager.getAbrtdTxns();
+		System.out.println("After calling get aborted");
+		System.out.println("ABorted Transactions");
+		for(int s : abrtdTxns){
+			System.out.println(s);
+		}
+		
 		xidCounter = recoveryManager.getMAXid() + 1;
 		System.out.println("Analyze phase done");
 		if(recoveryManager.redo()==false){
