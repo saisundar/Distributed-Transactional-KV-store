@@ -192,7 +192,7 @@ implements ResourceManager {
 		//System.out.println("No of active transactions: " + activeTxns.size());
 		//System.out.println(xid + ": " + activeTxns.get(xid));
 		System.out.println("Current XID: " + xid);
-
+		System.out.println(abrtdTxns.toString());
 		if(abrtdTxns.contains(xid)){
 			throw new TransactionAbortedException(xid,"");
 		}
