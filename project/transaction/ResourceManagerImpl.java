@@ -161,14 +161,14 @@ implements ResourceManager {
 			loadFiles();
 		}
 		catch(FileNotFoundException e){
-			System.out.println("Cannot find file/s: " + e.getMessage());
+			System.out.println("Cannot find file/s (Database probably does not exist only): " + e.getMessage());
 		}
 		System.out.println("Load files done/not done");		
 		try{
 			recover();
 		}
 		catch(FileNotFoundException e){
-			System.out.println("Failed in recover: "+ e.getMessage());
+			System.out.println("Nothing to recover"+ e.getMessage());
 		}
 		System.out.println("Recovery done");
 		
@@ -177,7 +177,7 @@ implements ResourceManager {
 			stopAndWait = Boolean.valueOf(false);
 			stopAndWait.notifyAll();
 		}*/
-		System.out.println("closing conbstructor");
+		System.out.println("closing constructor");
 	}
 
 
@@ -192,7 +192,6 @@ implements ResourceManager {
 			throw new InvalidTransactionException(xid,"");
 		}
 		System.out.println("Transaction is valid");
-
 		return ;
 
 			}
@@ -1721,7 +1720,7 @@ implements ResourceManager {
 
 	public void recover() throws FileNotFoundException{
 		RecoveryManager recoveryManager = new RecoveryManager(flightTable,  carTable,  hotelTable, reservationTable,  reservedflights);
-		System.out.println("Recoveryt Manager instantiated");
+		System.out.println("Recovery Manager instantiated");
 		if(recoveryManager.analyze()==false){
 			System.out.println("Failed during analyze");
 			return;

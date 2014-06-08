@@ -22,11 +22,10 @@ public class TableReader implements Callable<Integer>{
 		try{
 			fileIn = new FileInputStream("data/"+fileName);
 			in = new ObjectInputStream(fileIn);
-			System.out.println("Reading the object from " + fileName);
+			//System.out.println("Reading the object from " + fileName);
 			table =   in.readObject();
-			System.out.println("Reading done in Callable from "+fileName);
+			//System.out.println("Reading done in Callable from "+fileName);
 	}catch(FileNotFoundException e){
-		System.out.println("File not found to read");
 		return 2;
 	}catch(IOException e){
 		System.out.println("I/O exceptiuon ... should not happen");
