@@ -55,7 +55,7 @@ implements ResourceManager {
 	private static final Object DUMMY = new Object();
 	private final int WRITE = 1;
 	private final int READ = 0;
-	private static final int CHECKPOINT_TRIGGER = 10;
+	private static final int CHECKPOINT_TRIGGER = 1;
 	private static final int SLEEPSHUTDOWN = 5000;
 
 	// Data Sets
