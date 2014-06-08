@@ -47,6 +47,7 @@ implements ResourceManager {
 	private ExecutorService checkPointers ;
 	private Set<Callable<Integer>> callables;
 	private ExecutorService executor ;
+	private HashSet<Integer> abrtdTxns;
 
 	// Other Variables
 	private static final Object DUMMY = new Object();
@@ -124,11 +125,11 @@ implements ResourceManager {
 		Path path = Paths.get("data");
 		if(Files.notExists(path	))
 		{
-		 File dir= new File("data");
-		 dir.mkdir();
+			File dir= new File("data");
+			dir.mkdir();
 		}
 	}
-	
+
 	public ResourceManagerImpl() throws RemoteException {
 		System.out.println("starting constructor");
 		lockManager = new LockManager();
@@ -139,12 +140,14 @@ implements ResourceManager {
 		reservationTable = new ConcurrentHashMap<String, HashSet<Reservation>>();
 		reservedflights = new ConcurrentHashMap<String,Integer>();
 		executor = Executors.newSingleThreadExecutor();
+
 		//<----------UNDOING--------------------->
 		UndoIMTable = new ConcurrentHashMap<Integer,Stack<UndoIMLog>>();
 		//</----------UNDOING--------------------->
 
 		xidCounter = 1;
 		callables = new HashSet<Callable<Integer>>();
+		abrtdTxns = new HashSet<Integer>();
 
 		// How many threads do we want ?
 		// This is a configurable value. Need to set it to optimal value.
@@ -171,7 +174,7 @@ implements ResourceManager {
 			System.out.println("Nothing to recover"+ e.getMessage());
 		}
 		System.out.println("Recovery done");
-		
+
 		//TODO : why this?? synchronized (shuttingDown) {		
 		/*synchronized (stopAndWait) {
 			stopAndWait = Boolean.valueOf(false);
@@ -182,16 +185,17 @@ implements ResourceManager {
 
 
 	public void isValidTrxn(int xid)
-			throws InvalidTransactionException
+			throws InvalidTransactionException, TransactionAbortedException
 			{
 		//System.out.println("No of active transactions: " + activeTxns.size());
 		//System.out.println(xid + ": " + activeTxns.get(xid));
 		//System.out.println(activeTxns.containsKey(xid));
+		if(abrtdTxns.contains(xid)){
+			throw new TransactionAbortedException(xid,"");
+		}
 		if(activeTxns.get(xid) == null){
-			System.out.println("Throwing the Invalid Txn Exception");
 			throw new InvalidTransactionException(xid,"");
 		}
-		System.out.println("Transaction is valid");
 		return ;
 
 			}
@@ -292,15 +296,14 @@ implements ResourceManager {
 		checkPoint(0);
 		RecoveryManager recoveryManager = new RecoveryManager();
 		try{
-		System.out.println("Doing cleanup");
-		recoveryManager.deleteLogs();
+			System.out.println("Doing cleanup");
+			recoveryManager.deleteLogs();
 		}
 		catch(SecurityException e){
 			System.out.println("Security permission issues: "+e.getMessage());
 		}
 		catch(FileNotFoundException e){
 			System.out.println("PROBLEM WHILE DELETING LOGS");
-			throw new FileNotFoundException();
 		}
 		if(shuttingDown.get()>0)
 			System.exit(0);
@@ -343,7 +346,7 @@ implements ResourceManager {
 				System.out.println("SHOULD NOT REACH: XID DUPLICATE");
 			}
 			enteredTxnsCount++;
-			temp=xidCounter++;
+			temp = xidCounter++;
 		}
 
 		synchronized(HashSetEmpty)
@@ -360,7 +363,7 @@ implements ResourceManager {
 		return (temp);
 	}
 
-	public void removeXID (int xid) throws InvalidTransactionException
+	public void removeXID (int xid) throws InvalidTransactionException, TransactionAbortedException
 	{
 		isValidTrxn(xid);
 		synchronized(activeTxns){
@@ -518,6 +521,14 @@ implements ResourceManager {
 			InvalidTransactionException {
 		//When xid is removed from the hashset , see if the hashset becomes empty, if so notify the hashSetEmpty thread: Done in removeXID.
 		//<----------UNDOING--------------------->
+		
+		try {
+			isValidTrxn(xid);
+		} catch (TransactionAbortedException e1) {
+			System.out.println("FadddieXID type case, Abort is called as first");
+			return;
+		}
+		
 		Stack<UndoIMLog> undo = UndoIMTable.get(xid);
 		int retries=3;
 		UndoIMLog entry = null;
@@ -554,7 +565,12 @@ implements ResourceManager {
 		}
 		LogWriter.flush();
 		System.out.println(" Aborted=======");
-		removeXID(xid);
+	
+		try {
+			removeXID(xid);
+		} catch (TransactionAbortedException e) {
+			System.out.println("");
+		}
 		return;
 	}
 
@@ -1737,6 +1753,8 @@ implements ResourceManager {
 			System.out.println("No Need to recover");
 			return;
 		}
+		abrtdTxns = recoveryManager.getAbrtdTxns();
+		xidCounter = recoveryManager.getMAXid() + 1;
 		System.out.println("Analyze phase done");
 		if(recoveryManager.redo()==false){
 			System.out.println("Failed during redo");

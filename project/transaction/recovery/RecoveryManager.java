@@ -20,8 +20,21 @@ public class RecoveryManager {
 	RedoReservedFlights redoReservedFlights;
 	private HashSet<Integer> comtdTxns;
 	private HashSet<Integer> abrtdTxns;
-	private MAXid = -1;
+	private int MAXid = 0;
+
+	public HashSet<Integer> getAbrtdTxns() {
+		return abrtdTxns;
+	}
+
+	public int getMAXid() {
+		return MAXid;
+	}
+
 	LogReader logReader;
+	
+	public RecoveryManager(){
+		
+	}
 
 	public RecoveryManager(ConcurrentHashMap<String, Flight> flightTable, ConcurrentHashMap<String, Car> carTable, ConcurrentHashMap<String, Hotels> hotelTable, ConcurrentHashMap<String, HashSet<Reservation>> reservationTable, ConcurrentHashMap<String,Integer> reservedflights){
 		redoCar = new RedoCar(carTable);
@@ -209,5 +222,4 @@ public class RecoveryManager {
 			}
 		return true;
 	}
-
 }
