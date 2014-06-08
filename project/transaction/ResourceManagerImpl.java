@@ -218,7 +218,7 @@ implements ResourceManager {
 		synchronized(stopAndWait)
 		{
 			stopAndWait=stopAndWait.valueOf(false);
-			stopAndWait.notifyAll();
+			stopAndWait.notify();
 		}
 
 	}
