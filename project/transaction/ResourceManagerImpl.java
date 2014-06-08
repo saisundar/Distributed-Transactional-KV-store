@@ -169,7 +169,6 @@ implements ResourceManager {
 		}
 		catch(FileNotFoundException e){
 			System.out.println("Failed in recover: "+ e.getMessage());
-			e.printStackTrace();
 		}
 		System.out.println("Recovery done");
 		
