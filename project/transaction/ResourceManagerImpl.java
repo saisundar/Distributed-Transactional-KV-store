@@ -1734,6 +1734,7 @@ implements ResourceManager {
 
 	public boolean dieNow() 
 			throws RemoteException {
+		LogWriter.flush();
 		System.exit(1);
 		return true; // We won't ever get here since we exited above;
 		// but we still need it to please the compiler.
