@@ -44,6 +44,8 @@ implements ResourceManager {
 	private volatile Integer enteredTxnsCount=0;
 	private static Boolean stopAndWait = new Boolean(false);
 	private static Boolean HashSetEmpty = new Boolean(true);
+	private static Boolean DieBeforeCommit = new Boolean(false);
+	private static Boolean DieAfterCommit = new Boolean(false);
 	private ExecutorService checkPointers ;
 	private Set<Callable<Integer>> callables;
 	private ExecutorService executor ;
@@ -396,7 +398,16 @@ implements ResourceManager {
 		System.out.println("Committing");
 		// When xid is removed from the hashset , see if the hashset becomes equal to the shuttingDown.get() value -
 		// implies there are no more useful processes left. hence can shutdown the system.
-
+		
+		synchronized(DieBeforeCommit)
+		{
+			if(DieBeforeCommit)
+			{
+				dieNow();
+			}
+				
+		}
+		
 		Future returnVal = executor.submit(new TransactionLogger(xid+" " + "COMMIT\n"));
 		try
 		{
@@ -407,6 +418,14 @@ implements ResourceManager {
 			System.out.println("Something hapened while retrieving value of atomic integer retunVal.Lets all zink about zees now"+e.getMessage());
 		}
 		LogWriter.flush();
+		synchronized(DieAfterCommit)
+		{
+			if(DieAfterCommit)
+			{
+				dieNow();
+			}
+				
+		}
 		removeXID(xid);
 		System.out.println("Done commiting=======");
 		return true;
@@ -1721,11 +1740,20 @@ implements ResourceManager {
 
 	public boolean dieBeforePointerSwitch() 
 			throws RemoteException {
+		synchronized(DieBeforeCommit)
+		{
+			DieBeforeCommit=DieBeforeCommit.valueOf(true);
+		}
 		return true;
 	}
 
 	public boolean dieAfterPointerSwitch() 
 			throws RemoteException {
+		synchronized(DieAfterCommit)
+		{
+			DieAfterCommit=DieAfterCommit.valueOf(true);
+		}
+			
 		return true;
 	}
 
