@@ -33,6 +33,7 @@ public class RecoveryManager {
 
 	public boolean analyze() throws FileNotFoundException{
 		// Load Undo Redo Logs
+		System.out.println("In ANalyse");
 		comtdTxns = new HashSet<Integer>();
 		logReader.loadFile();
 		System.out.println("Loaded undo-redo log file");
