@@ -290,6 +290,18 @@ implements ResourceManager {
 		//code for checkpointing
 
 		checkPoint(0);
+		RecoveryManager recoveryManager = new RecoveryManager();
+		try{
+		System.out.println("Doing cleanup");
+		recoveryManager.deleteLogs();
+		}
+		catch(SecurityException e){
+			System.out.println("Security permission issues: "+e.getMessage());
+		}
+		catch(FileNotFoundException e){
+			System.out.println("PROBLEM WHILE DELETING LOGS");
+			throw new FileNotFoundException();
+		}
 		if(shuttingDown.get()>0)
 			System.exit(0);
 		updateCheckPointVariables();
@@ -1722,7 +1734,7 @@ implements ResourceManager {
 		RecoveryManager recoveryManager = new RecoveryManager(flightTable,  carTable,  hotelTable, reservationTable,  reservedflights);
 		System.out.println("Recovery Manager instantiated");
 		if(recoveryManager.analyze()==false){
-			System.out.println("Failed during analyze");
+			System.out.println("No Need to recover");
 			return;
 		}
 		System.out.println("Analyze phase done");
@@ -1731,16 +1743,5 @@ implements ResourceManager {
 			return;
 		}
 		System.out.println("REDO phase done");
-		try{
-		System.out.println("Doing cleanup");
-		recoveryManager.cleanup();
-		}
-		catch(SecurityException e){
-			System.out.println("Security permission issues: "+e.getMessage());
-		}
-		catch(FileNotFoundException e){
-			System.out.println("PROBLEM WHILE DELETING LOGS");
-			throw new FileNotFoundException();
-		}
 	}
 }

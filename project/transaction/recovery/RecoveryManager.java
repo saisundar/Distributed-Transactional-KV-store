@@ -19,8 +19,9 @@ public class RecoveryManager {
 	RedoReservation redoReservation;
 	RedoReservedFlights redoReservedFlights;
 	private HashSet<Integer> comtdTxns;
+	private HashSet<Integer> abrtdTxns;
+	private MAXid = -1;
 	LogReader logReader;
-	private static boolean recoveryDone = false;
 
 	public RecoveryManager(ConcurrentHashMap<String, Flight> flightTable, ConcurrentHashMap<String, Car> carTable, ConcurrentHashMap<String, Hotels> hotelTable, ConcurrentHashMap<String, HashSet<Reservation>> reservationTable, ConcurrentHashMap<String,Integer> reservedflights){
 		redoCar = new RedoCar(carTable);
@@ -33,8 +34,8 @@ public class RecoveryManager {
 
 	public boolean analyze() throws FileNotFoundException{
 		// Load Undo Redo Logs
-		System.out.println("In ANalyse");
 		comtdTxns = new HashSet<Integer>();
+		abrtdTxns = new HashSet<Integer>();
 		logReader.loadFile();
 		System.out.println("Loaded undo-redo log file");
 		// Create HashSet of Committed Transactions
@@ -48,7 +49,22 @@ public class RecoveryManager {
 			if(nextLine.contains("COMMIT")){
 				System.out.println("I see a commit");
 				String[] xid = nextLine.split(" ");
-				comtdTxns.add(Integer.parseInt(xid[0]));
+				int XID = Integer.parseInt(xid[0]);
+				comtdTxns.add(XID);
+				abrtdTxns.remove(XID);
+				MAXid = (XID>MAXid)?XID:MAXid;
+			}
+			else if(nextLine.contains("ABORT")){
+				String[] xid = nextLine.split(" ");
+				int XID = Integer.parseInt(xid[0]);
+				abrtdTxns.add(XID);
+				MAXid = (XID>MAXid)?XID:MAXid;
+			}
+			else {
+				String[] xid = nextLine.split("@#@");
+				int XID = Integer.parseInt(xid[0]);
+				abrtdTxns.add(XID);
+				MAXid = (XID>MAXid)?XID:MAXid;
 			}
 			nextLine = logReader.nextLine();
 		}
@@ -183,17 +199,15 @@ public class RecoveryManager {
 			nextLine = logReader.nextLine();
 		}
 		logReader.close();
-		recoveryDone = true;
 		return true;
 	}
 
-	public boolean cleanup() throws FileNotFoundException, SecurityException{
-		if(recoveryDone == true){
-			File f = new File("undo-redo.log"); 
+	public boolean deleteLogs() throws FileNotFoundException, SecurityException{
+			File f = new File(".data/undo-redo.log"); 
 			if(f.exists()){
 				f.delete();
 			}
-		}
 		return true;
 	}
+
 }
