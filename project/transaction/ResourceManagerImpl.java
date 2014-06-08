@@ -212,20 +212,20 @@ implements ResourceManager {
 		{
 			HashSetEmpty.set(true);
 		}
-		System.out.println("1");;
+		
 		synchronized(enteredTxnsCount)
 		{
 			enteredTxnsCount=0;
 		}
-		System.out.println("2");;
+		
 		synchronized(stopAndWait)
 		{
 			stopAndWait.set(false);
-			System.out.println("2.1");;
+			
 			stopAndWait.notifyAll();
 			
 		}
-		System.out.println("3");;
+		
 
 	}
 
