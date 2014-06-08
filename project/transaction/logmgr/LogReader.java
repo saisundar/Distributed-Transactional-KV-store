@@ -10,10 +10,12 @@ public class LogReader {
 	private BufferedReader fr;
 
 	public void loadFile() throws FileNotFoundException{
+		System.out.println("Trying to load undo redo logs");
 		fr = new BufferedReader(new FileReader("data/undo-redo.log"));
 		if(fr == null){
 			System.out.println("fr is null");
 		}
+		System.out.println("undo redo logs LOADED");
 	}
 
 	public String nextLine(){
