@@ -216,7 +216,7 @@ public class RecoveryManager {
 	}
 
 	public boolean deleteLogs() throws FileNotFoundException, SecurityException{
-			File f = new File(".data/undo-redo.log"); 
+			File f = new File("./data/undo-redo.log"); 
 			if(f.exists()){
 				f.delete();
 			}

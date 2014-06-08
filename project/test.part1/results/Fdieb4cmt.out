@@ -29,5 +29,7 @@ Bound to RM
 [1] 	LINE--1 return true
 [1] 	LINE--1 call commit xid
 [1] Calling commit
-[1] commit returned: true
+[1] commit exceptioned: java.rmi.UnmarshalException
 [1] 	LINE--1 except java.rmi.RemoteException
+[1] 	LINE--1 exit
+[1] Test exiting.

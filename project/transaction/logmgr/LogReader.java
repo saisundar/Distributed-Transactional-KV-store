@@ -11,7 +11,7 @@ public class LogReader {
 
 	public void loadFile() throws FileNotFoundException{
 		System.out.println("Trying to load undo redo logs");
-		fr = new BufferedReader(new FileReader(".data/undo-redo.log"));
+		fr = new BufferedReader(new FileReader("./data/undo-redo.log"));
 		if(fr == null){
 			System.out.println("fr is null");
 		}

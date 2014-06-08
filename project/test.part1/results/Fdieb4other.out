@@ -1,6 +1,7 @@
 RM launched
 Bound to RM
-[M] Launching 1 threads.
+[M] Launching 2 threads.
+[2] Thread running.
 [1] Thread running.
 [1] 	LINE--1 call start
 [1] Calling start
@@ -27,10 +28,32 @@ Bound to RM
 [1] Calling commit
 [1] commit returned: true
 [1] 	LINE--1 return true
-[1] 	LINE--1 call dieNow
-[1] Calling dieNow
-[1] dieNow exceptioned: java.rmi.UnmarshalException
-[1] 	LINE--1 except java.rmi.RemoteException 
+[1] 	LINE--1 call start
+[1] Calling start
+[1] start returned: 2
+[1] xid set to 2
+[1] 	LINE--1 return
+[2] 	LINE--2 call start
+[2] Calling start
+[2] start returned: 3
+[2] xid set to 3
+[2] 	LINE--2 return
+[2] 	LINE--2 call addRooms xid "Stanford" 200 300
+[2] Calling addRooms
+[2] addRooms returned: true
+[2] 	LINE--2 return true
+[1] 	LINE--1 call addFlight xid "347" 100 620
+[1] Calling addFlight
+[1] addFlight returned: true
+[1] 	LINE--1 return true
+[1] 	LINE--1 call dieBeforePointerSwitch
+[1] Calling dieBeforePointerSwitch
+[1] dieBeforePointerSwitch returned: true
+[1] 	LINE--1 return true
+[1] 	LINE--1 call commit xid
+[1] Calling commit
+[1] commit exceptioned: java.rmi.UnmarshalException
+[1] 	LINE--1 except java.rmi.RemoteException
 [1] 	LINE--1 launch
 RM launched
 Bound to RM
