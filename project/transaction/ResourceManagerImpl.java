@@ -225,6 +225,7 @@ implements ResourceManager {
 
 	private void checkPoint (int tries) throws RemoteException
 	{
+		System.out.println("CHeckpoint begin");
 		boolean failed=false;
 		try
 		{
@@ -257,6 +258,7 @@ implements ResourceManager {
 		}
 		if(failed)checkPoint(tries+1);
 		LogWriter.flush();
+		System.out.println("CHeckpoint END");
 		return;
 		//executorService.shutdown();
 	}
@@ -301,6 +303,7 @@ implements ResourceManager {
 		try{
 			System.out.println("Doing cleanup");
 			recoveryManager.deleteLogs();
+			System.out.println("done cleanup");
 		}
 		catch(SecurityException e){
 			System.out.println("Security permission issues: "+e.getMessage());
@@ -308,10 +311,16 @@ implements ResourceManager {
 		catch(FileNotFoundException e){
 			System.out.println("PROBLEM WHILE DELETING LOGS");
 		}
+		catch(IllegalMonitorStateException e)
+		{
+				e.printStackTrace();e.getCause();
+		}
 		if(shuttingDown.get()>0)
 			System.exit(0);
+		
+		System.out.println("about to update variables");
 		updateCheckPointVariables();
-
+		System.out.println("Stop incoming ends");
 		return;
 	}
 
