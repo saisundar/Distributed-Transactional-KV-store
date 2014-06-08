@@ -211,15 +211,18 @@ implements ResourceManager {
 		{
 			HashSetEmpty=HashSetEmpty.valueOf(true);
 		}
+		System.out.println("1");;
 		synchronized(enteredTxnsCount)
 		{
 			enteredTxnsCount=0;
 		}
+		System.out.println("2");;
 		synchronized(stopAndWait)
 		{
 			stopAndWait=stopAndWait.valueOf(false);
 			stopAndWait.notify();
 		}
+		System.out.println("3");;
 
 	}
 
