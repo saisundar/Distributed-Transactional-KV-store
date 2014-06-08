@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicBoolean;
 /** 
  * Resource Manager for the Distributed Travel Reservation System.
  * 
@@ -42,8 +43,8 @@ implements ResourceManager {
 	private static volatile AtomicInteger shuttingDown = new AtomicInteger();
 	private volatile AtomicInteger committedTrxns = new  AtomicInteger();
 	private volatile Integer enteredTxnsCount=0;
-	private static Boolean stopAndWait = new Boolean(false);
-	private static Boolean HashSetEmpty = new Boolean(true);
+	private static AtomicBoolean stopAndWait = new AtomicBoolean(false);
+	private static AtomicBoolean HashSetEmpty = new AtomicBoolean(true);
 	private static Boolean DieBeforeCommit = new Boolean(false);
 	private static Boolean DieAfterCommit = new Boolean(false);
 	private ExecutorService checkPointers ;
@@ -209,7 +210,7 @@ implements ResourceManager {
 		committedTrxns.set(0);
 		synchronized(HashSetEmpty)
 		{
-			HashSetEmpty=HashSetEmpty.valueOf(true);
+			HashSetEmpty.set(true);
 		}
 		System.out.println("1");;
 		synchronized(enteredTxnsCount)
@@ -219,9 +220,10 @@ implements ResourceManager {
 		System.out.println("2");;
 		synchronized(stopAndWait)
 		{
-			stopAndWait=stopAndWait.valueOf(false);
+			stopAndWait.set(false);
 			System.out.println("2.1");;
 			stopAndWait.notifyAll();
+			
 		}
 		System.out.println("3");;
 
@@ -271,8 +273,8 @@ implements ResourceManager {
 	{
 		synchronized(stopAndWait)
 		{
-			if(!stopAndWait){
-				stopAndWait=stopAndWait.valueOf(true);
+			if(!stopAndWait.get()){
+				stopAndWait.set(true);
 			}
 			else
 				return;
@@ -284,7 +286,7 @@ implements ResourceManager {
 		}
 		//wait for all transactions to get over. Sleep on the HashSetEmpty object.
 		synchronized(HashSetEmpty){
-			while(!HashSetEmpty)
+			while(!HashSetEmpty.get())
 			{
 				try{
 
@@ -337,7 +339,7 @@ implements ResourceManager {
 			System.out.println("entering start==========");
 			synchronized(stopAndWait)
 			{
-				while(stopAndWait)
+				while(stopAndWait.get())
 				{
 					try{
 						System.out.println("waiting on stopAndWait");
@@ -369,7 +371,7 @@ implements ResourceManager {
 		{
 			activeTxns.put(temp,DUMMY);
 			System.out.println("tid assigned is "+temp);
-			HashSetEmpty=HashSetEmpty.valueOf(false);
+			HashSetEmpty.set(false);
 		}
 
 		//<----------UNDOING--------------------->
@@ -388,7 +390,7 @@ implements ResourceManager {
 			System.out.println("Done removing from hashmap");
 			if(activeTxns.size()==shuttingDown.get()){
 				System.out.println("active transactions are virtually empty");
-				HashSetEmpty=HashSetEmpty.valueOf(true);
+				HashSetEmpty.set(true);
 			}
 			System.out.println("Notifying");
 			synchronized(HashSetEmpty){
