@@ -29,7 +29,8 @@ public class TableWriter implements Callable<Integer> {
 		}
 		catch(IOException e)
 		{
-			System.out.println(" exception message"+e.getMessage());
+			System.out.println("the issue is here: exception message"+e.getMessage());
+			e.printStackTrace();
 			return 1;
 
 		}finally{
