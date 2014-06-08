@@ -1,6 +1,8 @@
 package transaction.bean;
 
-public class Flight {
+import java.io.Serializable;
+
+public class Flight implements Serializable{
 private String flightNum;
 private int price;
 private int numSeats;
