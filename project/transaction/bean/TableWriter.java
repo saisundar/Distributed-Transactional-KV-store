@@ -21,7 +21,7 @@ public class TableWriter implements Callable<Integer> {
 	public Integer call() throws Exception{
 		try
 		{
-			OutputStream fileOut = new FileOutputStream(fileName);
+			OutputStream fileOut = new FileOutputStream("data/"+fileName);
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(table);
 			out.close(); // required !
