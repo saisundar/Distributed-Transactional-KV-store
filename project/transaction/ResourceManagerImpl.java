@@ -1779,18 +1779,20 @@ implements ResourceManager {
 	public void recover() throws FileNotFoundException{
 		RecoveryManager recoveryManager = new RecoveryManager(flightTable,  carTable,  hotelTable, reservationTable,  reservedflights);
 		System.out.println("Recovery Manager instantiated");
-		if(recoveryManager.analyze()==false){
+		boolean flag = recoveryManager.analyze();
+		abrtdTxns = recoveryManager.getAbrtdTxns();
+		xidCounter = recoveryManager.getMAXid() + 1;
+		
+		if(flag==false){
 			System.out.println("No Need to recover");
 			return;
 		}
-		abrtdTxns = recoveryManager.getAbrtdTxns();
 		System.out.println("After calling get aborted");
 		System.out.println("ABorted Transactions");
 		for(int s : abrtdTxns){
 			System.out.println(s);
 		}
 		
-		xidCounter = recoveryManager.getMAXid() + 1;
 		System.out.println("Analyze phase done");
 		if(recoveryManager.redo()==false){
 			System.out.println("Failed during redo");

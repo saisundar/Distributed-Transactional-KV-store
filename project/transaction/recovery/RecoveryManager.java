@@ -69,13 +69,11 @@ public class RecoveryManager {
 				int XID = Integer.parseInt(xid[0]);
 				comtdTxns.add(XID);
 				abrtdTxns.remove(XID);
-				System.out.println("Removing from abort: "+XID);
 				MAXid = (XID>MAXid)?XID:MAXid;
 			}
 			else if(nextLine.contains("ABORT")){
 				String[] xid = nextLine.split(" ");
 				int XID = Integer.parseInt(xid[0]);
-				System.out.println("Seeing abort: "+XID);
 				abrtdTxns.add(XID);
 				MAXid = (XID>MAXid)?XID:MAXid;
 			}
@@ -83,7 +81,6 @@ public class RecoveryManager {
 				String[] xid = nextLine.split("@#@");
 				int XID = Integer.parseInt(xid[0]);
 				abrtdTxns.add(XID);
-				System.out.println("Inserting in abort: "+XID);
 				MAXid = (XID>MAXid)?XID:MAXid;
 			}
 			nextLine = logReader.nextLine();
