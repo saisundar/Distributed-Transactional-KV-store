@@ -220,6 +220,7 @@ implements ResourceManager {
 		synchronized(stopAndWait)
 		{
 			stopAndWait=stopAndWait.valueOf(false);
+			System.out.println("2.1");;
 			stopAndWait.notifyAll();
 		}
 		System.out.println("3");;
