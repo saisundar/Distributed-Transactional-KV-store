@@ -1,0 +1,38 @@
+RM launched
+Bound to RM
+[M] Launching 2 threads.
+[2] Thread running.
+[1] Thread running.
+[1] 	LINE--1 call start
+[1] Calling start
+[1] start returned: 1
+[1] xid set to 1
+[1] 	LINE--1 return
+[1] 	LINE--1 call addFlight xid "347" 100 310
+[1] Calling addFlight
+[1] addFlight returned: true
+[1] 	LINE--1 return true
+[1] 	LINE--1 call commit xid
+[1] Calling commit
+[1] commit returned: true
+[1] 	LINE--1 return true
+[1] 	LINE--1 call start
+[1] Calling start
+[1] start returned: 2
+[1] xid set to 2
+[2] 	LINE--2 call start
+[1] 	LINE--1 return
+[2] Calling start
+[2] start returned: 3
+[2] xid set to 3
+[1] 	LINE--1 call queryFlight xid "347"
+[1] Calling queryFlight
+[1] queryFlight returned: 100
+[1] 	LINE--1 return 100
+[2] 	LINE--2 return
+[2] 	LINE--2 call queryFlightPrice xid "347"
+[2] Calling queryFlightPrice
+[2] queryFlightPrice returned: 310
+[2] 	LINE--2 return 310
+[2] 	LINE--2 exit
+[2] Test exiting.

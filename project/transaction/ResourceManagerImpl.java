@@ -150,11 +150,11 @@ implements ResourceManager {
 		// This is a configurable value. Need to set it to optimal value.
 		checkPointers = Executors.newFixedThreadPool(5); 
 
-		callables.add(new TableWriter((Object)flightTable,"data/flightTable"));
-		callables.add(new TableWriter((Object)carTable,"data/carTable"));
-		callables.add(new TableWriter((Object)hotelTable,"data/hotelTable"));
-		callables.add(new TableWriter((Object)reservationTable,"data/reservationTable"));
-		callables.add(new TableWriter((Object)reservedflights,"data/reservedFlights"));
+		callables.add(new TableWriter((Object)flightTable,"flightTable"));
+		callables.add(new TableWriter((Object)carTable,"carTable"));
+		callables.add(new TableWriter((Object)hotelTable,"hotelTable"));
+		callables.add(new TableWriter((Object)reservationTable,"reservationTable"));
+		callables.add(new TableWriter((Object)reservedflights,"reservedFlights"));
 
 		checkAndCreateData();
 		try{

@@ -1,0 +1,29 @@
+RM launched
+Bound to RM
+[M] Launching 2 threads.
+[1] Thread running.
+[2] Thread running.
+[1] 	LINE--1 call start
+[1] Calling start
+[1] start returned: 1
+[1] xid set to 1
+[1] 	LINE--1 return
+[2] 	LINE--2 call start
+[2] Calling start
+[2] start returned: 2
+[2] xid set to 2
+[1] 	LINE--1 call addRooms xid "Stanford" 200 150
+[1] Calling addRooms
+[2] 	LINE--2 return
+[1] addRooms returned: true
+[1] 	LINE--1 return true
+[2] 	LINE--2 call queryRoomsPrice xid "Stanford"
+[2] Calling queryRoomsPrice
+[1] 	LINE--1 call commit xid
+[1] Calling commit
+[1] commit returned: true
+[1] 	LINE--1 return true
+[2] queryRoomsPrice returned: 150
+[2] 	LINE--2 return 150
+[2] 	LINE--2 exit
+[2] Test exiting.
