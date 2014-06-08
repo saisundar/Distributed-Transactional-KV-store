@@ -10,7 +10,7 @@ public class LogWriter {
 	static{
 		try {
 			System.out.println("Creating UNDI-REDO log file");
-			fw = new FileWriter("data/undo-redo.log");
+			fw = new FileWriter("./data/undo-redo.log");
 		} catch (IOException e) {
 			System.out.println("Error creating the log file");
 		}

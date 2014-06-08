@@ -23,7 +23,7 @@ public class TableWriter implements Callable<Integer> {
 		ObjectOutputStream out = null;
 		try
 		{
-			fileOut = new FileOutputStream("data/"+fileName);
+			fileOut = new FileOutputStream("./data/"+fileName);
 			out = new ObjectOutputStream(fileOut);
 			out.writeObject(table);
 		}
